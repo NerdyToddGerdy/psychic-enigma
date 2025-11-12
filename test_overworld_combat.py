@@ -2,12 +2,12 @@
 Test script for overworld combat encounters
 """
 
-import sys
 import random
+import sys
+
+from combat.combat_system import CombatEncounter
 from generators.character import create_character
 from generators.hex_grid import HexGrid
-from combat.combat_system import CombatEncounter
-from generators.monster import Monster
 
 
 def test_overworld_combat():
@@ -41,8 +41,6 @@ def test_overworld_combat():
     print("\n3. Testing monster spawning...")
 
     # Test the _spawn_hostile_encounter method
-    from tables import overland_tables
-    from tables.table_roller import roll_on_table
 
     # Temporarily set the hex to a terrain that can have encounters
     test_hex = hex_grid.hexes[(0, 1)]
@@ -97,7 +95,8 @@ def test_overworld_combat():
             player_hp_after = combat.player.hp_current
             damage_taken = player_hp_before - player_hp_after
             if damage_taken > 0:
-                print(f"      ✗ Monsters deal {damage_taken} damage to player! (HP: {player_hp_after}/{combat.player.hp_max})")
+                print(f"      ✗ Monsters deal {damage_taken} damage to player!"
+                      f" (HP: {player_hp_after}/{combat.player.hp_max})")
             else:
                 print(f"      ✓ Monsters miss!")
 

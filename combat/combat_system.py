@@ -4,12 +4,14 @@ Turn-based combat engine with attack rolls, damage, and special abilities
 """
 
 import random
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
+from typing import Dict, List
 
 from generators.character import Player
 from generators.monster import Monster
-from tables.table_roller import roll_d6, roll_d20
+from tables import table_utilities
+from tables.table_roller import roll_d20
+from tables.table_utilities import update_status_effects
 
 
 class CombatAction(Enum):
@@ -332,7 +334,7 @@ class CombatEncounter:
 
         for monster in alive_monsters:
             # Update status effects
-            monster.update_status_effects()
+            table_utilities.update_status_effects(monster)
 
             # Check for paralysis/stun
             if monster.has_status_effect("paralyzed") or monster.has_status_effect(
@@ -366,7 +368,8 @@ class CombatEncounter:
         self.is_player_turn = True
 
         # Update player status effects
-        self.player.update_status_effects()
+        update_status_effects(self)
+        # self.player.update_status_effects()
 
     def _monster_attack(self, monster: Monster):
         """
@@ -445,7 +448,8 @@ class CombatEncounter:
                 )
             else:
                 self._log_message(
-                    f"{target.name} resists the poison! (Rolled {save_roll}, needed {target.toughness} or less)", "special"
+                    f"{target.name} resists the poison! (Rolled {save_roll}, needed {target.toughness} or"
+                    f" less)", "special"
                 )
 
         # Paralyze - TOU saving throw (roll under TOU)
@@ -458,7 +462,8 @@ class CombatEncounter:
                 )
             else:
                 self._log_message(
-                    f"{target.name} resists the paralysis! (Rolled {save_roll}, needed {target.toughness} or less)", "special"
+                    f"{target.name} resists the paralysis! (Rolled {save_roll}, needed {target.toughness} or"
+                    f" less)", "special"
                 )
 
         # Disease - TOU saving throw (roll under TOU)
@@ -467,11 +472,13 @@ class CombatEncounter:
             if not success:
                 target.add_status_effect("diseased", duration=-1)
                 self._log_message(
-                    f"{target.name} contracts a DISEASE! (Rolled {save_roll}, needed {target.toughness} or less)", "special"
+                    f"{target.name} contracts a DISEASE! (Rolled {save_roll}, needed {target.toughness} or"
+                    f" less)", "special"
                 )
             else:
                 self._log_message(
-                    f"{target.name} resists the disease! (Rolled {save_roll}, needed {target.toughness} or less)", "special"
+                    f"{target.name} resists the disease! (Rolled {save_roll}, needed {target.toughness} or"
+                    f" less)", "special"
                 )
 
         # Level drain (reduce max HP temporarily)

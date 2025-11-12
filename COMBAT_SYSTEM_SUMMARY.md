@@ -48,7 +48,7 @@
 
 ### High Priority
 1. **Update room generation to instantiate Monster objects**
-   - Currently stores raw dict data from tables
+   - It currently stores raw dict data from tables
    - Need to create Monster instances instead
    - Required for combat system to work with dungeon encounters
 

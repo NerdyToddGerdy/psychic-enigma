@@ -185,7 +185,7 @@ class TestHexGrid(unittest.TestCase):
     def test_move_player_explores_hexes(self):
         """Test movement explores new hexes"""
         grid = HexGrid()
-        result = grid.move_player(EAST := SOUTHEAST, distance=2)
+        result = grid.move_player(SOUTHEAST, distance=2)
 
         # All hexes along path should be explored
         for path_hex in result["path"]:

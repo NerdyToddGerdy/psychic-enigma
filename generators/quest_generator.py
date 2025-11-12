@@ -57,7 +57,8 @@ class Quest:
             coordinates=tuple(data["coordinates"]) if data.get("coordinates") else None,
             completed=data.get("completed", False),
             completion_timestamp=data.get("completion_timestamp"),
-            completion_coordinates=tuple(data["completion_coordinates"]) if data.get("completion_coordinates") else None,
+            completion_coordinates=tuple(
+                data["completion_coordinates"]) if data.get("completion_coordinates") else None,
             dungeon=dungeon
         )
 
@@ -72,7 +73,8 @@ class Quest:
 
         # Add direction and distance if available
         if self.direction and self.distance:
-            location_info = f" The location is {self.distance} hex{'es' if self.distance > 1 else ''} {self.direction.lower()}."
+            location_info = (f" The location is {self.distance} hex{'es' if self.distance > 1 else ''}"
+                             f" {self.direction.lower()}.")
             return base_description + location_info
 
         return base_description
@@ -214,7 +216,7 @@ def generate_quest_with_location(hex_grid, excluded_coordinates=None):
 
     # Convert excluded coordinates to set of tuples for faster lookup
     excluded_set = {tuple(coord) if isinstance(coord, list) else coord
-                   for coord in excluded_coordinates}
+                    for coord in excluded_coordinates}
 
     for attempt in range(max_attempts):
         destination = hex_grid.generate_quest_destination()

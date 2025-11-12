@@ -4,10 +4,10 @@ Handles parsing and resolving dungeon encounters with bracket notation
 """
 
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, Optional
 
-from tables.table_roller import roll_d6, roll_2d6
 from tables import dungeon_tables
+from tables.table_roller import roll_d6, roll_2d6
 
 
 def parse_dungeon_encounter(encounter_text: str) -> Dict:
@@ -266,10 +266,8 @@ def create_encounter_summary(encounter_data: Dict) -> str:
     Returns:
         Formatted summary string
     """
-    summary_parts = []
-
-    summary_parts.append(f"**Encounter (2d6={encounter_data['encounter_roll']})**")
-    summary_parts.append(f"\n{encounter_data['full_description']}")
+    summary_parts = [f"**Encounter (2d6={encounter_data['encounter_roll']})**",
+                     f"\n{encounter_data['full_description']}"]
 
     # Check for monsters
     monster_type = extract_monster_from_encounter(encounter_data["selected_text"])
@@ -296,7 +294,7 @@ def create_encounter_summary(encounter_data: Dict) -> str:
         )
     if effects["has_trap"]:
         summary_parts.append(
-            f"\n*Trap present: {effects.get('trap_damage', 'unknown') } damage*"
+            f"\n*Trap present: {effects.get('trap_damage', 'unknown')} damage*"
         )
     if effects["grants_bonus"]:
         summary_parts.append(f"\n*Grants bonus: {effects.get('bonus_description', '')}*")

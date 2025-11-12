@@ -37,6 +37,34 @@ def select_denizen_table(tier: int) -> dict:
             return dungeon_tables.DENIZEN_TIER_2_RANGE_3_5
 
 
+# Handle dice expressions for coins/gems
+# Pattern: "3d6 Gold", "d6 Gems"
+def handle_dice_expressions(treasure_str: str):
+    dice_match = re.match(r'(\d*)d(\d+)(?:x(\d+))?\s*(\w+)', treasure_str, re.IGNORECASE)
+    if dice_match:
+        num_dice = int(dice_match.group(1)) if dice_match.group(1) else 1
+        die_size = int(dice_match.group(2))
+        multiplier = int(dice_match.group(3)) if dice_match.group(3) else 1
+        item_type = dice_match.group(4).lower()
+
+        total = sum(random.randint(1, die_size) for _ in range(num_dice)) * multiplier
+        return total, item_type
+
+
+def get_gem_data(total=None):
+    gem_value = total * random.randint(10, 50)
+    gem_types = ["Ruby", "Sapphire", "Emerald", "Diamond", "Amethyst", "Topaz"]
+    gem_name = random.choice(gem_types) if total == 1 else f"{total} Mixed Gems"
+    return Item(
+        name=gem_name,
+        item_type=ItemType.JUNK,
+        slot=ItemSlot.NONE,
+        rarity=ItemRarity.UNCOMMON if total > 5 else ItemRarity.COMMON,
+        value=gem_value,
+        description=f"{total} precious gem(s) worth {gem_value} gold total"
+    )
+
+
 def parse_treasure_to_item(treasure_string: str, tier: int = 1) -> Item:
     """
     Parse a treasure string from TREASURE_B table and generate an actual Item object.
@@ -52,7 +80,6 @@ def parse_treasure_to_item(treasure_string: str, tier: int = 1) -> Item:
 
     # Handle "Artifact" - generate a high-tier epic/legendary item
     if treasure_lower == "artifact":
-        rarity = ItemRarity.EPIC if random.random() < 0.6 else ItemRarity.LEGENDARY
         return ItemGenerator.generate_random_loot(tier=max(2, tier))
 
     # Handle "Ring" - generate an armor piece (shield slot represents accessory)
@@ -70,52 +97,33 @@ def parse_treasure_to_item(treasure_string: str, tier: int = 1) -> Item:
 
     # Handle dice expressions for coins/gems
     # Pattern: "d100 Silver", "3d6x100 Gold", "d20 Gems"
-    dice_match = re.match(r'(\d*)d(\d+)(?:x(\d+))?\s*(\w+)', treasure_string, re.IGNORECASE)
-    if dice_match:
-        num_dice = int(dice_match.group(1)) if dice_match.group(1) else 1
-        die_size = int(dice_match.group(2))
-        multiplier = int(dice_match.group(3)) if dice_match.group(3) else 1
-        item_type = dice_match.group(4).lower()
+    total, item_type = handle_dice_expressions(treasure_string)
 
-        # Roll the dice
-        total = sum(random.randint(1, die_size) for _ in range(num_dice)) * multiplier
+    # Create appropriate item based on type
+    if "silver" in item_type:
+        # Convert silver to gold value (10 silver = 1 gold)
+        gold_value = total // 10
+        return Item(
+            name=f"{total} Silver Coins",
+            item_type=ItemType.JUNK,
+            slot=ItemSlot.NONE,
+            rarity=ItemRarity.COMMON,
+            value=gold_value,
+            description=f"A pouch containing {total} silver coins (worth {gold_value} gold)"
+        )
 
-        # Create appropriate item based on type
-        if "silver" in item_type:
-            # Convert silver to gold value (10 silver = 1 gold)
-            gold_value = total // 10
-            return Item(
-                name=f"{total} Silver Coins",
-                item_type=ItemType.JUNK,
-                slot=ItemSlot.NONE,
-                rarity=ItemRarity.COMMON,
-                value=gold_value,
-                description=f"A pouch containing {total} silver coins (worth {gold_value} gold)"
-            )
+    elif "gold" in item_type:
+        return Item(
+            name=f"{total} Gold Coins",
+            item_type=ItemType.JUNK,
+            slot=ItemSlot.NONE,
+            rarity=ItemRarity.COMMON,
+            value=total,
+            description=f"A pouch containing {total} gold coins"
+        )
 
-        elif "gold" in item_type:
-            return Item(
-                name=f"{total} Gold Coins",
-                item_type=ItemType.JUNK,
-                slot=ItemSlot.NONE,
-                rarity=ItemRarity.COMMON,
-                value=total,
-                description=f"A pouch containing {total} gold coins"
-            )
-
-        elif "gem" in item_type:
-            # Each gem worth 10-50 gold
-            gem_value = total * random.randint(10, 50)
-            gem_types = ["Ruby", "Sapphire", "Emerald", "Diamond", "Amethyst", "Topaz"]
-            gem_name = random.choice(gem_types) if total == 1 else f"{total} Mixed Gems"
-            return Item(
-                name=gem_name,
-                item_type=ItemType.JUNK,
-                slot=ItemSlot.NONE,
-                rarity=ItemRarity.UNCOMMON if total > 5 else ItemRarity.COMMON,
-                value=gem_value,
-                description=f"{total} precious gem(s) worth {gem_value} gold total"
-            )
+    elif "gem" in item_type:
+        get_gem_data(total)
 
     # Fallback: create a generic treasure item
     return Item(
@@ -156,7 +164,6 @@ def parse_treasure_a_to_item(treasure_string: str, tier: int = 1) -> Item:
 
     # Handle "Artifact" - generate a high-tier epic/legendary item
     elif treasure_lower == "artifact":
-        rarity = ItemRarity.EPIC if random.random() < 0.6 else ItemRarity.LEGENDARY
         return ItemGenerator.generate_random_loot(tier=max(2, tier))
 
     # Handle "Potion" - generate a consumable
@@ -169,40 +176,20 @@ def parse_treasure_a_to_item(treasure_string: str, tier: int = 1) -> Item:
 
     # Handle dice expressions for coins/gems
     # Pattern: "3d6 Gold", "d6 Gems"
-    dice_match = re.match(r'(\d*)d(\d+)(?:x(\d+))?\s*(\w+)', treasure_string, re.IGNORECASE)
-    if dice_match:
-        num_dice = int(dice_match.group(1)) if dice_match.group(1) else 1
-        die_size = int(dice_match.group(2))
-        multiplier = int(dice_match.group(3)) if dice_match.group(3) else 1
-        item_type = dice_match.group(4).lower()
+    total, item_type = handle_dice_expressions(treasure_string)
+    # Create appropriate item based on type
+    if "gold" in item_type:
+        return Item(
+            name=f"{total} Gold Coins",
+            item_type=ItemType.JUNK,
+            slot=ItemSlot.NONE,
+            rarity=ItemRarity.COMMON,
+            value=total,
+            description=f"A pouch containing {total} gold coins"
+        )
 
-        # Roll the dice
-        total = sum(random.randint(1, die_size) for _ in range(num_dice)) * multiplier
-
-        # Create appropriate item based on type
-        if "gold" in item_type:
-            return Item(
-                name=f"{total} Gold Coins",
-                item_type=ItemType.JUNK,
-                slot=ItemSlot.NONE,
-                rarity=ItemRarity.COMMON,
-                value=total,
-                description=f"A pouch containing {total} gold coins"
-            )
-
-        elif "gem" in item_type:
-            # Each gem worth 10-50 gold
-            gem_value = total * random.randint(10, 50)
-            gem_types = ["Ruby", "Sapphire", "Emerald", "Diamond", "Amethyst", "Topaz"]
-            gem_name = random.choice(gem_types) if total == 1 else f"{total} Mixed Gems"
-            return Item(
-                name=gem_name,
-                item_type=ItemType.JUNK,
-                slot=ItemSlot.NONE,
-                rarity=ItemRarity.UNCOMMON if total > 5 else ItemRarity.COMMON,
-                value=gem_value,
-                description=f"{total} precious gem(s) worth {gem_value} gold total"
-            )
+    elif "gem" in item_type:
+        get_gem_data(total)
 
     # Fallback: create a generic treasure item
     return Item(

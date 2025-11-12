@@ -68,7 +68,8 @@ class GameManager:
                 for i, quest in enumerate(self.game_state.completed_quests)
             ],
             "player": self.game_state.player.to_dict() if self.game_state.player else None,
-            "active_combat": self.game_state.active_combat.get_combat_status() if self.game_state.active_combat else None,
+            "active_combat": self.game_state.active_combat.get_combat_status()
+            if self.game_state.active_combat else None,
             "current_day": self.game_state.current_day,
             "movement_count": self.game_state.movement_count
         }
@@ -192,7 +193,8 @@ class GameManager:
 
         return result
 
-    def _process_trap_save(self, trap_name, player):
+    @staticmethod
+    def _process_trap_save(trap_name, player):
         """
         Process a trap save according to Single Sheet rules (page 3).
         Roll 1d20 equal to or under the relevant attribute to avoid the trap.
@@ -216,7 +218,8 @@ class GameManager:
             "Acid": {"attribute": "toughness", "damage": "1d6", "description": "resist the acid spray"}
         }
 
-        config = trap_config.get(trap_name, {"attribute": "dexterity", "damage": "1d6", "description": "avoid the trap"})
+        config = trap_config.get(trap_name,
+                                 {"attribute": "dexterity", "damage": "1d6", "description": "avoid the trap"})
 
         # Get the appropriate attribute value
         attribute_name = config["attribute"]
@@ -812,7 +815,8 @@ class GameManager:
                     "room": current_room.to_dict(),
                     "combat_active": self.game_state.active_combat is not None,
                     "combat_started": combat_started,
-                    "combat": self.game_state.active_combat.get_combat_status() if self.game_state.active_combat else None
+                    "combat": self.game_state.active_combat.get_combat_status()
+                    if self.game_state.active_combat else None
                 }
 
         # Fallback: Generate simple room contents (for backward compatibility)
@@ -947,7 +951,8 @@ class GameManager:
                 monster_data = denizen_table[7]
 
             # Return monster name and stats
-            return f"{monster_data['name']} (HD: {monster_data['hd']}, AC: {monster_data['ac']}, Attack: {monster_data['attack']})"
+            return (f"{monster_data['name']} (HD: {monster_data['hd']}, AC: {monster_data['ac']},"
+                    f" Attack: {monster_data['attack']})")
 
         return danger_type
 
@@ -983,9 +988,8 @@ class GameManager:
             if available_exits:
                 # Prefer directions that lead to unexplored rooms
                 current_room = dungeon.grid.get_current_room()
-                direction = None
 
-                # Build list of exits that lead to new (ungenerated) rooms
+                # Build list of exits that lead to new (un-generated) rooms
                 unexplored_exits = []
                 for exit_dir in available_exits:
                     new_x, new_y = dungeon.grid.get_adjacent_pos(current_room.x, current_room.y, exit_dir)
@@ -1075,7 +1079,8 @@ class GameManager:
                         "direction_moved": direction,
                         "room": new_room.to_dict(),
                         "combat_started": combat_started,
-                        "combat": self.game_state.active_combat.get_combat_status() if self.game_state.active_combat else None,
+                        "combat": self.game_state.active_combat.get_combat_status() if self.game_state.active_combat
+                        else None,
                         "trap_saves": trap_saves,
                         "hazard_saves": hazard_saves,
                         "treasure_collected": treasure_collected
@@ -1116,7 +1121,8 @@ class GameManager:
         dungeon = quest.dungeon
 
         if dungeon.current_room + 1 < dungeon.total_rooms:
-            raise ValueError(f"Must explore all rooms first ({dungeon.current_room + 1}/{dungeon.total_rooms} explored)")
+            raise ValueError(
+                f"Must explore all rooms first ({dungeon.current_room + 1}/{dungeon.total_rooms} explored)")
 
         # Mark dungeon as completed
         dungeon.complete()
@@ -1196,7 +1202,7 @@ class GameManager:
     # Character Management Methods
 
     def create_character(self, name, race='Human', character_type='Adventurer',
-                        hp=10, ac=10, attack_bonus=0, weapon=None, armor=None):
+                         hp=10, ac=10, attack_bonus=0, weapon=None, armor=None):
         """
         Create a custom player character.
 
@@ -1615,7 +1621,7 @@ class GameManager:
                     raise ValueError("Already at full health")
 
                 heal_amount = min(item.healing_amount,
-                                self.game_state.player.hp_max - self.game_state.player.hp_current)
+                                  self.game_state.player.hp_max - self.game_state.player.hp_current)
                 self.game_state.player.hp_current += heal_amount
                 effects_applied.append(f"Healed {heal_amount} HP")
 
@@ -1626,7 +1632,8 @@ class GameManager:
             elif item.effect_type in ["buff_attack", "buff_defense"]:
                 # Temporary buffs - would need a buff system to track duration
                 # For now, just provide feedback
-                effects_applied.append(f"Applied {item.effect_type.replace('_', ' ')} buff for {item.effect_duration} turns")
+                effects_applied.append(
+                    f"Applied {item.effect_type.replace('_', ' ')} buff for {item.effect_duration} turns")
 
             else:
                 raise ValueError(f"Unknown consumable effect: {item.effect_type}")

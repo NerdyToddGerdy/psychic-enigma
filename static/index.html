@@ -215,7 +215,7 @@
         <div class="modal-content">
             <h2>Day's End</h2>
             <div id="rationPromptInfo" class="ration-prompt-info">
-                <p>The day is over and you're weary from travel.</p>
+                <p>The day is over, and you're weary from travel.</p>
                 <p id="rationHealText">Would you like to consume a ration to recover some health?</p>
             </div>
             <div class="modal-actions">
@@ -328,7 +328,7 @@
                 <div class="character-option">
                     <h4>Random Character</h4>
                     <p>Generate a random character using game tables</p>
-                    <input type="text" id="randomCharName" placeholder="Character Name (optional)">
+                    <label for="randomCharName"></label><input type="text" id="randomCharName" placeholder="Character Name (optional)">
                     <button id="createRandomBtn" class="btn btn-primary">Generate Random</button>
                 </div>
 
@@ -337,14 +337,14 @@
                     <h4>Custom Character</h4>
                     <p>Create a custom character with specific stats</p>
                     <div class="custom-char-form">
-                        <input type="text" id="customCharName" placeholder="Name" required>
-                        <input type="text" id="customCharRace" placeholder="Race (default: Human)">
-                        <input type="text" id="customCharClass" placeholder="Class (default: Adventurer)">
-                        <input type="number" id="customCharHP" placeholder="HP (default: 10)" min="1">
-                        <input type="number" id="customCharAC" placeholder="AC (default: 10)" min="1">
-                        <input type="number" id="customCharAttack" placeholder="Attack Bonus (default: 0)">
-                        <input type="text" id="customCharWeapon" placeholder="Weapon (optional)">
-                        <input type="text" id="customCharArmor" placeholder="Armor (optional)">
+                        <label for="customCharName"></label><input type="text" id="customCharName" placeholder="Name" required>
+                        <label for="customCharRace"></label><input type="text" id="customCharRace" placeholder="Race (default: Human)">
+                        <label for="customCharClass"></label><input type="text" id="customCharClass" placeholder="Class (default: Adventurer)">
+                        <label for="customCharHP"></label><input type="number" id="customCharHP" placeholder="HP (default: 10)" min="1">
+                        <label for="customCharAC"></label><input type="number" id="customCharAC" placeholder="AC (default: 10)" min="1">
+                        <label for="customCharAttack"></label><input type="number" id="customCharAttack" placeholder="Attack Bonus (default: 0)">
+                        <label for="customCharWeapon"></label><input type="text" id="customCharWeapon" placeholder="Weapon (optional)">
+                        <label for="customCharArmor"></label><input type="text" id="customCharArmor" placeholder="Armor (optional)">
                         <button id="createCustomBtn" class="btn btn-primary">Create Custom</button>
                     </div>
                 </div>

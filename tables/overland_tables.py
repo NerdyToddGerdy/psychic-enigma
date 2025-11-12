@@ -363,14 +363,20 @@ TRAVELING_ENCOUNTERS = {
     2: "A large tree: [1-2] hung with something [3-4] radiating light or sound [5-6] opens when approached",
     3: "A mystical glade: [1-2] radiates calm [3-4] causes sleep [5-6] induces forgetfulness",
     4: "A field of mushrooms: [1-2] that are poisonous [3-4] that satiate hunger [5-6] that give strength",
-    5: "A man locked in a cage: [1-2] that promises to help if let out [3-4] that promises treasure if let out [5-6] that speaks of revenge",
+    5: "A man locked in a cage: [1-2] that promises to help if let out [3-4] that promises treasure if let out [5-6] "
+       "that speaks of revenge",
     6: "A procession: [1-2] of refugees [3-4] of soldiers [5-6] of performers",
-    7: "A soldier: [1-2] loots the corpse of another soldier [3-4] tries to make his donkey proceed [5-6] is fending off hostile monsters",
-    8: "A small camp of hunters: [1-2] welcomes you [3-4] stands and threatens you [5-6] asks for your help with a problem",
-    9: "A patrol of d6 creatures: [1-2] escorts captives [3-4] argues over an abandoned cart [5-6] harasses a group of travelers",
-    10: "A raucous crowd is gathered: [1-2] shouting for death [3-4] shouting for forgiveness [5-6] shouting in disbelief",
+    7: "A soldier: [1-2] loots the corpse of another soldier [3-4] tries to make his donkey proceed [5-6] is fending "
+       "off hostile monsters",
+    8: "A small camp of hunters: [1-2] welcomes you [3-4] stands and threatens you [5-6] asks for your help with a "
+       "problem",
+    9: "A patrol of d6 creatures: [1-2] escorts captives [3-4] argues over an abandoned cart [5-6] harasses a group of"
+       " travelers",
+    10: "A raucous crowd is gathered: [1-2] shouting for death [3-4] shouting for forgiveness [5-6] shouting in"
+        " disbelief",
     11: "A merchant that sells: [1-2] Minor Healing Elixirs [3-4] Mundane items [5-6] Special Items",
-    12: "A scarred woman: [1-2] offers to trade food for a weapon [3-4] speaks of a wizard in a tower [5-6] roasts a monster over a fire"
+    12: "A scarred woman: [1-2] offers to trade food for a weapon [3-4] speaks of a wizard in a tower [5-6] roasts a"
+        " monster over a fire"
 }
 
 # ============================================================================
@@ -671,7 +677,7 @@ CREATURES_MONSTER_L = {
     2: {"name": "Manticore", "hd": "6+4", "ac": 15, "attack": "Bite[+1], Tail Spikes"},
     3: {"name": "Hydra", "hd": "5-12 (# of heads)", "ac": 14, "attack": "Bite/head"},
     4: {"name": "Cockatrice", "hd": "5", "ac": 13, "attack": "Bite, Petrify"},
-    5: {"name": "Owlbear", "hd": "5", "ac": 14, "attack": "Clawx2(d3) or Bite(2d6)"},
+    5: {"name": "Owlbear", "hd": "5", "ac": 14, "attack": "Claw x2(d3) or Bite(2d6)"},
     6: {"name": "Wyvern", "hd": "7", "ac": 16, "attack": "Bite or Sting, Fly, Poison"}
 }
 
@@ -688,7 +694,7 @@ CREATURES_UNNATURAL = {
 # Human: d4, Animal: d6, Humanoid: d4, Monster(S): d2, Monster(L): 1, Unnatural: 1
 
 # ============================================================================
-# MUNDANE ITEMS (Grid 11-66)
+# MUNDANE ITEMS (Grid 11-66) (Roll 2 d6. 1st die is 10's place, 2nd is 1's place)
 # ============================================================================
 
 MUNDANE_ITEMS = {
@@ -697,7 +703,8 @@ MUNDANE_ITEMS = {
     31: "Deck of cards", 32: "Playing dice", 33: "Handsaw", 34: "Tent", 35: "Needle", 36: "Sack of nails",
     41: "Necklace", 42: "Rabbit foot", 43: "Red ribbon", 44: "Ring", 45: "Spear tip", 46: "Fruit bread",
     51: "Comb", 52: "Torch", 53: "Belt", 54: "Warm Hat", 55: "Fishing rod", 56: "Parchment",
-    61: "Dried fruit", 62: "Healing herbs", 63: "Antidote vial", 64: "Quiver/arrows", 65: "Flint & steel", 66: "Magni-Glass"
+    61: "Dried fruit", 62: "Healing herbs", 63: "Antidote vial", 64: "Quiver/arrows", 65: "Flint & steel",
+    66: "Magni-Glass"
 }
 
 # Special notes:

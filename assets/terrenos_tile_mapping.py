@@ -58,6 +58,7 @@ TERRAIN_ALIASES = {
     "bog": "wetlands",
 }
 
+
 def get_tile_for_terrain(terrain_type: str) -> str:
     """
     Get the hex tile image path for a given terrain type.
@@ -81,6 +82,7 @@ def get_tile_for_terrain(terrain_type: str) -> str:
 
     # Default to plains if terrain not found
     return TERRAIN_TILE_MAPPING["plains"]
+
 
 def get_all_available_tiles():
     """

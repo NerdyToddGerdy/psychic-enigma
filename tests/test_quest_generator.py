@@ -187,12 +187,12 @@ class TestDisplayQuestWithClues(unittest.TestCase):
         # Check clue_type values
         self.assertIn(clue_type, ["No", "Narrative Shift", "Clues"])
 
-        # If has_clues is True, clue_detail should not be None
+        # If 'has_clues' is True, clue_detail should not be None
         if has_clues:
             self.assertIsNotNone(clue_detail)
             self.assertIsInstance(clue_detail, str)
 
-        # If has_clues is False, clue_type should be "No"
+        # If 'has_clues' is False, clue_type should be "No"
         if not has_clues:
             self.assertEqual(clue_type, "No")
             self.assertIsNone(clue_detail)

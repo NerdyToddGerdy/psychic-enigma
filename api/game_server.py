@@ -570,7 +570,7 @@ def use_consumable():
 
 # Error handlers
 @app.errorhandler(404)
-def not_found(error):
+def not_found():
     """Handle 404 errors"""
     return jsonify({
         "success": False,
@@ -579,7 +579,7 @@ def not_found(error):
 
 
 @app.errorhandler(500)
-def internal_error(error):
+def internal_error():
     """Handle 500 errors"""
     return jsonify({
         "success": False,
@@ -596,8 +596,8 @@ def run_server(host='127.0.0.1', port=5000, debug=True):
         port (int): Port number
         debug (bool): Debug mode
     """
-    print(f"Starting RPG Game Server on http://{host}:{port}")
-    print(f"Open your browser to http://{host}:{port} to play!")
+    print(f"Starting RPG Game Server on https://{host}:{port}")
+    print(f"Open your browser to https://{host}:{port} to play!")
     app.run(host=host, port=port, debug=debug)
 
 

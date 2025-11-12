@@ -13,7 +13,8 @@ from generators.character import Player
 class GameState:
     """Represents the complete game state"""
 
-    def __init__(self, hex_grid=None, quests=None, active_quest_index=None, completed_quests=None, player=None, active_combat=None, current_day=1, movement_count=0):
+    def __init__(self, hex_grid=None, quests=None, active_quest_index=None, completed_quests=None, player=None,
+                 active_combat=None, current_day=1, movement_count=0):
         """
         Initialize game state.
 
@@ -95,7 +96,8 @@ class GameState:
         current_day = data.get("current_day", 1)
         movement_count = data.get("movement_count", 0)
 
-        return cls(hex_grid, quests, active_quest_index, completed_quests, player, active_combat, current_day, movement_count)
+        return cls(hex_grid, quests, active_quest_index, completed_quests, player, active_combat, current_day,
+                   movement_count)
 
 
 def save_game(game_state, filename=None, save_dir="saves"):

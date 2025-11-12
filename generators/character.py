@@ -165,21 +165,6 @@ class Player:
                 return True
         return False
 
-    def update_status_effects(self):
-        """Update status effects, decrementing durations and removing expired ones"""
-        effects_to_remove = []
-        for effect in self.status_effects:
-            if effect["duration"] > 0:
-                effect["duration"] -= 1
-                if effect["duration"] == 0:
-                    effects_to_remove.append(effect)
-
-        for effect in effects_to_remove:
-            self.status_effects.remove(effect)
-
-        if effects_to_remove:
-            self.last_modified = datetime.now().isoformat()
-
     def has_status_effect(self, effect_name: str) -> bool:
         """Check if player has a specific status effect"""
         return any(effect["name"] == effect_name for effect in self.status_effects)
@@ -259,13 +244,15 @@ class Player:
         if success:
             # Spell cast successfully - apply Fatigue
             self.is_fatigued = True
-            message = f"{self.name} successfully casts {spell_name}! (Rolled {roll}, needed {self.willpower} or less) BUT is now Fatigued!"
+            message = (f"{self.name} successfully casts {spell_name}! (Rolled {roll}, needed {self.willpower} or less)"
+                       f" BUT is now Fatigued!")
             damage_taken = 0
         else:
             # Spell fails - take d6 damage
             damage_taken = roll_d6()
             self.take_damage(damage_taken)
-            message = f"{self.name} fails to cast {spell_name}! (Rolled {roll}, needed {self.willpower} or less) Takes {damage_taken} damage from the backlash!"
+            message = (f"{self.name} fails to cast {spell_name}! (Rolled {roll}, needed {self.willpower} or less) Takes"
+                       f" {damage_taken} damage from the backlash!")
 
         self.last_modified = datetime.now().isoformat()
         return success, damage_taken, message
@@ -334,13 +321,15 @@ class Player:
             self.hp_current = 1
             self.is_dying = False
             self.death_timer = None
-            message = f"Death save SUCCESS! {self.name} clings to life with 1 HP! (Rolled {roll}, needed {self.willpower} or less)"
+            message = (f"Death save SUCCESS! {self.name} clings to life with 1 HP! (Rolled {roll}, needed "
+                       f"{self.willpower} or less)")
         else:
             # Failure: Dying, will die in 1 hour
             self.hp_current = 0
             self.is_dying = True
             self.death_timer = 60  # 60 turns = 1 hour
-            message = f"Death save FAILED! {self.name} is dying and will perish in 1 hour if not treated! (Rolled {roll}, needed {self.willpower} or less)"
+            message = (f"Death save FAILED! {self.name} is dying and will perish in 1 hour if not treated! (Rolled "
+                       f"{roll}, needed {self.willpower} or less)")
 
         self.last_modified = datetime.now().isoformat()
         return roll, success, message
@@ -503,7 +492,10 @@ class Player:
 
     # ===== SINGLE SHEET GAME SYSTEM SAVING THROWS =====
 
-    def make_saving_throw(self, attribute: str, advantage: bool = False, disadvantage: bool = False) -> Tuple[int, bool]:
+    def make_saving_throw(self,
+                          attribute: str,
+                          advantage: bool = False,
+                          disadvantage: bool = False) -> Tuple[int, bool]:
         """
         Make a saving throw using PDF rules: roll d20 equal to or under attribute value.
 
@@ -599,7 +591,8 @@ class Player:
                 slots_used += item.get_slot_size()
             elif isinstance(item, str):
                 # String items - check for bulky keywords
-                if any(bulky in item.lower() for bulky in ['plate', 'chain', 'great sword', 'warhammer', 'battle axe', 'crossbow']):
+                if any(bulky in item.lower()
+                        for bulky in ['plate', 'chain', 'great sword', 'warhammer', 'battle axe', 'crossbow']):
                     slots_used += 2
                 else:
                     slots_used += 1
@@ -634,7 +627,8 @@ class Player:
         if isinstance(item, Item):
             slot_size = item.get_slot_size()
         elif isinstance(item, str):
-            if any(bulky in item.lower() for bulky in ['plate', 'chain', 'great sword', 'warhammer', 'battle axe', 'crossbow']):
+            if any(bulky in item.lower()
+                    for bulky in ['plate', 'chain', 'great sword', 'warhammer', 'battle axe', 'crossbow']):
                 slot_size = 2
 
         available = self.get_available_inventory_slots()
@@ -1110,7 +1104,7 @@ def create_character(
 
 def roll_ability_score() -> int:
     """
-    Roll D&D 5e ability score using 4d6 drop lowest method.
+    Roll D&D 5e ability score using 4d6 drop the lowest method.
 
     Returns:
         Ability score (typically 3-18, average ~12)

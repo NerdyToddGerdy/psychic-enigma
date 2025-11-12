@@ -5,9 +5,9 @@ Inspired by Clickpocalypse-style loot systems
 """
 
 import random
-from enum import Enum
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Dict, List, Optional
 
 
 class ItemRarity(Enum):
@@ -26,6 +26,10 @@ class ItemRarity(Enum):
     @property
     def display_name(self):
         return self._name.capitalize()
+
+    @property
+    def name(self):
+        return self._name
 
 
 class ItemType(Enum):
@@ -85,7 +89,7 @@ class Item:
             "name": self.name,
             "item_type": self.item_type.value,
             "slot": self.slot.value if self.slot != ItemSlot.NONE else None,
-            "rarity": self.rarity._name,
+            "rarity": self.rarity.name,
             "value": self.value,
             "damage_die": self.damage_die,
             "attack_bonus": self.attack_bonus,
@@ -110,7 +114,7 @@ class Item:
                 rarity = ItemRarity[rarity_value.upper()]
             except KeyError:
                 # Fall back to searching by value
-                rarity = next((r for r in ItemRarity if r._name == rarity_value), ItemRarity.COMMON)
+                rarity = next((r for r in ItemRarity if r.name == rarity_value), ItemRarity.COMMON)
         else:
             rarity = rarity_value
 
@@ -162,7 +166,8 @@ class ItemGenerator:
     WEAPON_PREFIXES = ["Rusty", "Crude", "Steel", "Sharp", "Gleaming", "Mighty", "Ancient", "Legendary"]
     ARMOR_PREFIXES = ["Tattered", "Worn", "Sturdy", "Reinforced", "Gleaming", "Enchanted", "Ancient", "Legendary"]
 
-    WEAPON_TYPES = ["Dagger", "Short Sword", "Long Sword", "Great Sword", "Axe", "Battle Axe", "Mace", "Warhammer", "Spear", "Bow", "Crossbow"]
+    WEAPON_TYPES = ["Dagger", "Short Sword", "Long Sword", "Great Sword", "Axe", "Battle Axe", "Mace", "Warhammer",
+                    "Spear", "Bow", "Crossbow"]
     ARMOR_TYPES = ["Leather Armor", "Hide Armor", "Chain Mail", "Scale Mail", "Plate Mail"]
     HELMET_TYPES = ["Leather Cap", "Iron Helm", "Steel Helm", "Full Helm"]
     SHIELD_TYPES = ["Buckler", "Round Shield", "Kite Shield", "Tower Shield"]
@@ -276,7 +281,7 @@ class ItemGenerator:
 
     @classmethod
     def generate_armor(cls, tier: int = 1, rarity: Optional[ItemRarity] = None,
-                      armor_slot: ItemSlot = ItemSlot.ARMOR) -> Item:
+                       armor_slot: ItemSlot = ItemSlot.ARMOR) -> Item:
         """
         Generate armor/helmet/shield with stats scaled by tier and rarity.
 
@@ -326,7 +331,7 @@ class ItemGenerator:
         return Item(
             name=name,
             item_type=ItemType.ARMOR if armor_slot == ItemSlot.ARMOR else
-                     (ItemType.HELMET if armor_slot == ItemSlot.HELMET else ItemType.SHIELD),
+            (ItemType.HELMET if armor_slot == ItemSlot.HELMET else ItemType.SHIELD),
             slot=armor_slot,
             rarity=rarity,
             value=value,
@@ -473,13 +478,14 @@ class ItemGenerator:
 
     @classmethod
     def _build_item_name(cls, base_name: str, rarity: ItemRarity,
-                        bonus: int, modifiers: List[str]) -> str:
+                         bonus: int, modifiers: List[str]) -> str:
         """Build procedural item name with prefix/suffix"""
         name_parts = []
 
         # Prefix for higher rarities
         if rarity.tier >= ItemRarity.UNCOMMON.tier:
-            if "weapon" in base_name.lower() or any(w in base_name for w in ["Sword", "Axe", "Mace", "Dagger", "Spear", "Bow"]):
+            if "weapon" in base_name.lower() or any(
+                    w in base_name for w in ["Sword", "Axe", "Mace", "Dagger", "Spear", "Bow"]):
                 prefix = random.choice(cls.WEAPON_PREFIXES)
             else:
                 prefix = random.choice(cls.ARMOR_PREFIXES)

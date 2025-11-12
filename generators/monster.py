@@ -3,11 +3,11 @@ Monster System
 Handles monster creation, stats, and special abilities
 """
 
-import re
 import random
+import re
 from typing import Dict, List, Optional, Tuple
 
-from tables.table_roller import roll_d6, roll_d20
+from tables.table_roller import roll_d20
 
 
 class Monster:
@@ -299,6 +299,16 @@ class Monster:
 
         return is_hit, roll, is_critical
 
+    @staticmethod
+    def check_for_explicit_dice(attack):
+        # Check for explicit damage dice
+        # Pattern: d6, d8, 2d6, 1d4, etc.
+        match = re.search(r"(\d*)d(\d+)", attack)
+        if match:
+            num_dice = int(match.group(1)) if match.group(1) else 1
+            die_size = int(match.group(2))
+            return sum(random.randint(1, die_size) for _ in range(num_dice))
+
     def roll_damage(self) -> int:
         """
         Roll damage for the monster.
@@ -311,13 +321,7 @@ class Monster:
         """
         attack = self.attack_description.lower()
 
-        # Check for explicit damage dice
-        # Pattern: d6, d8, 2d6, 1d4, etc.
-        match = re.search(r"(\d*)d(\d+)", attack)
-        if match:
-            num_dice = int(match.group(1)) if match.group(1) else 1
-            die_size = int(match.group(2))
-            return sum(random.randint(1, die_size) for _ in range(num_dice))
+        self.check_for_explicit_dice(attack)
 
         # Check for weapon notation: "Wpn", "Wpn[+1]", "Wpn(2d6)", etc.
         if "wpn" in attack:
@@ -325,11 +329,7 @@ class Monster:
             wpn_match = re.search(r"wpn\(([^)]+)\)", attack)
             if wpn_match:
                 damage_str = wpn_match.group(1)
-                dice_match = re.search(r"(\d*)d(\d+)", damage_str)
-                if dice_match:
-                    num_dice = int(dice_match.group(1)) if dice_match.group(1) else 1
-                    die_size = int(dice_match.group(2))
-                    return sum(random.randint(1, die_size) for _ in range(num_dice))
+                self.check_for_explicit_dice(attack)
 
             # Default weapon damage
             return random.randint(1, 6)
@@ -388,18 +388,6 @@ class Monster:
                 self.status_effects.remove(effect)
                 return True
         return False
-
-    def update_status_effects(self):
-        """Update status effects, decrementing durations"""
-        effects_to_remove = []
-        for effect in self.status_effects:
-            if effect["duration"] > 0:
-                effect["duration"] -= 1
-                if effect["duration"] == 0:
-                    effects_to_remove.append(effect)
-
-        for effect in effects_to_remove:
-            self.status_effects.remove(effect)
 
     def has_status_effect(self, effect_name: str) -> bool:
         """Check if monster has a specific status effect"""

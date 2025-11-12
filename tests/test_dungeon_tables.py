@@ -78,19 +78,6 @@ class TestDungeonTableStructure(unittest.TestCase):
         self.assertEqual(len(dungeon_tables.CREATURES), 6)
         self.assertEqual(len(dungeon_tables.UNNATURAL), 6)
 
-    def test_encounter_tier_tables(self):
-        """Test encounter tier tables"""
-        # Tier 1-2 (2d6 results: 2-12)
-        self.assertEqual(len(dungeon_tables.ENCOUNTER_TIER_1_2), 11)
-        self.assertIn(2, dungeon_tables.ENCOUNTER_TIER_1_2)
-        self.assertIn(12, dungeon_tables.ENCOUNTER_TIER_1_2)
-
-        # Tier 3-4
-        self.assertEqual(len(dungeon_tables.ENCOUNTER_TIER_3_4), 11)
-
-        # Tier 5-6
-        self.assertEqual(len(dungeon_tables.ENCOUNTER_TIER_5_6), 11)
-
     def test_denizen_tables(self):
         """Test denizen tables"""
         # Check that denizen tables exist and have correct size (2d6 = 11 results)
@@ -169,15 +156,6 @@ class TestDungeonTableRolling(unittest.TestCase):
             result = roll_on_table(dungeon_tables.DANGER)
             self.assertIsInstance(result, str)
 
-    def test_roll_encounter(self):
-        """Test rolling on encounter tables"""
-        for _ in range(10):
-            result = roll_on_table(dungeon_tables.ENCOUNTER_TIER_1_2)
-            self.assertIsInstance(result, dict)
-            self.assertIn("name", result)
-            self.assertIn("hd", result)
-            self.assertIn("ac", result)
-
     def test_roll_loot_corpse(self):
         """Test rolling on loot corpse tables"""
         for _ in range(10):
@@ -210,14 +188,6 @@ class TestDungeonNameGeneration(unittest.TestCase):
 
 class TestEncounterStructure(unittest.TestCase):
     """Test that encounter entries have proper structure"""
-
-    def test_encounter_has_required_fields(self):
-        """Test that all encounters have required fields"""
-        for encounter in dungeon_tables.ENCOUNTER_TIER_1_2.values():
-            self.assertIn("name", encounter)
-            self.assertIn("hd", encounter)
-            self.assertIn("ac", encounter)
-            self.assertIn("attack", encounter)
 
     def test_denizen_has_required_fields(self):
         """Test that all denizens have required fields"""

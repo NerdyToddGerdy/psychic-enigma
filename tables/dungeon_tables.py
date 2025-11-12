@@ -381,50 +381,6 @@ UNNATURAL = {
 # ============================================================================
 # DUNGEON ENCOUNTERS (2d6)
 # ============================================================================
-
-# Based on dungeon size/tier (1-2, 3-4, 5-6)
-ENCOUNTER_TIER_1_2 = {
-    2: {"name": "Acolyte", "hd": "1", "ac": 16, "attack": "Wpn"},
-    3: {"name": "Centipede", "hd": "1d2HP", "ac": 10, "attack": "Bite, Poison"},
-    4: {"name": "Giant Rat", "hd": "1-1", "ac": 12, "attack": "Bite, Disease"},
-    5: {"name": "Giant Rat", "hd": "1-1", "ac": 12, "attack": "Bite, Disease"},
-    6: {"name": "Spider", "hd": "2+2", "ac": 13, "attack": "Bite, Poison, Web"},
-    7: {"name": "Kobold", "hd": "1/2", "ac": 13, "attack": "Weapon"},
-    8: {"name": "Skeleton", "hd": "1/2", "ac": 11, "attack": "Wpn"},
-    9: {"name": "Skeleton", "hd": "1/2", "ac": 11, "attack": "Wpn"},
-    10: {"name": "Bandit", "hd": "1", "ac": 12, "attack": "Wpn"},
-    11: {"name": "Bandit", "hd": "1", "ac": 12, "attack": "Wpn"},
-    12: {"name": "Giant Rat", "hd": "1-1", "ac": 12, "attack": "Bite, Disease"}
-}
-
-ENCOUNTER_TIER_3_4 = {
-    2: {"name": "Giant Bat", "hd": "4", "ac": 12, "attack": "Bite, Disease(50%)"},
-    3: {"name": "Ghoul", "hd": "2", "ac": 13, "attack": "Claw, Paralyze"},
-    4: {"name": "Carrion Creeper", "hd": "3", "ac": 14, "attack": "Bite(1), Paralyze"},
-    5: {"name": "Spider", "hd": "2+2", "ac": 13, "attack": "Bite, Poison, Web"},
-    6: {"name": "Spider", "hd": "2+2", "ac": 13, "attack": "Bite, Poison, Web"},
-    7: {"name": "Zombie", "hd": "1", "ac": 12, "attack": "Wpn & Shield"},
-    8: {"name": "Giant Bat", "hd": "4", "ac": 12, "attack": "Bite, Disease(50%)"},
-    9: {"name": "Lizardman", "hd": "2+1", "ac": 14, "attack": "Sword"},
-    10: {"name": "Lizardman", "hd": "2+1", "ac": 14, "attack": "Sword"},
-    11: {"name": "Bandit", "hd": "1", "ac": 12, "attack": "Wpn"},
-    12: {"name": "Bandit", "hd": "1", "ac": 12, "attack": "Wpn"}
-}
-
-ENCOUNTER_TIER_5_6 = {
-    2: {"name": "Ghoul", "hd": "2", "ac": 13, "attack": "Claw, Paralyze"},
-    3: {"name": "Demon", "hd": "3", "ac": 16, "attack": "Tail Sting, Immune Wpn"},
-    4: {"name": "Bugbear", "hd": "3+1", "ac": 14, "attack": "Wpn or Bite"},
-    5: {"name": "Grey Ooze", "hd": "3", "ac": 11, "attack": "Strike, Imn. Magic/Steel"},
-    6: {"name": "Demon", "hd": "3", "ac": 16, "attack": "Tail Sting, Imn. Wpn"},
-    7: {"name": "Giant Centipede", "hd": "4", "ac": 19, "attack": "Bite, Poison"},
-    8: {"name": "Gargoyle", "hd": "4", "ac": 14, "attack": "Claw, Fly"},
-    9: {"name": "Giant Skeleton", "hd": "2", "ac": 12, "attack": "Wpn"},
-    10: {"name": "Minotaur", "hd": "6+4", "ac": 13, "attack": "Wpn(+1)"},
-    11: {"name": "Troll", "hd": "6+3", "ac": 15, "attack": "Claw(+2), Regeneration"},
-    12: {"name": "Hell Hound", "hd": "5", "ac": 15, "attack": "Bite, Fire(2HP/Rnd.)"}
-}
-
 # Special: Roll 6 on 2d6 for Tier 5-6 results in rare encounters
 ENCOUNTER_TIER_SPECIAL = {
     1: {"name": "Vampire", "hd": "7-9", "ac": 17, "attack": "Bite, Imn. Wpn, Regen."},
@@ -552,12 +508,17 @@ DUNGEON_ENCOUNTERS = {
        "he can cast heal (true)",
     6: "An adventurer's corpse [1-2] is rigged with a trap (d8 dmg) [3-4] has a purse with d20 coins [5-6] has a "
        "magical cloak (causes shadow camouflage)",
-    7: "Two creatures: [1-2] toss something between them as a game [3-4] argue over which should receive an item between them [5-6] are fighting another two creatures",
+    7: "Two creatures: [1-2] toss something between them as a game [3-4] argue over which should receive an item "
+       "between them [5-6] are fighting another two creatures",
     8: "A creature sleeps: [1-2] draped over a chest [3-4] in a doorway [5-6] atop a sarcophagus",
-    9: "A lost merchant: [1-2] is catatonic in the corner [3-4] pleads for your help [5-6] attacks in a fit of total madness",
-    10: "Centipedes: [1-2] eat the carcass of a creature [3-4] surround an NPC in a corner [5-6] peck through the remains of an adventurer and their gear",
-    11: "1d4 Adventurers: [1-2] are fighting a Tier 1 Unnatural [3-4] are trying to disarm a trap [5-6] are arguing about whether to open a treasure chest",
-    12: "A large egg: [1-2] emanates warmth and a soft glow [3-4] begins to crack, and the snout of some reptile is beginning to emerge [5-6] is cracked open, with a trail of blood and slime leading out of the room"
+    9: "A lost merchant: [1-2] is catatonic in the corner [3-4] pleads for your help [5-6] attacks in a fit of total"
+       " madness",
+    10: "Centipedes: [1-2] eat the carcass of a creature [3-4] surround an NPC in a corner [5-6] peck through the"
+        " remains of an adventurer and their gear",
+    11: "1d4 Adventurers: [1-2] are fighting a Tier 1 Unnatural [3-4] are trying to disarm a trap [5-6] are arguing"
+        " about whether to open a treasure chest",
+    12: "A large egg: [1-2] emanates warmth and a soft glow [3-4] begins to crack, and the snout of some reptile is"
+        " beginning to emerge [5-6] is cracked open, with a trail of blood and slime leading out of the room"
 }
 
 # ============================================================================
@@ -622,14 +583,19 @@ LOOT_CORPSE_6 = {
 # BOSSES
 # ============================================================================
 
+# noinspection SpellCheckingInspection
 BOSSES = {
     "lazrothe": {
         "name": "Lazrothe the Sorcerer",
         "hd": "7",
         "ac": 17,
         "attacks": ["Staff (-1)", "Fog", "Ice Touch", "Summon"],
-        "special": "Fog: Obscures vision and hinders initiative. Ice Touch: at range causes loss of footing and focus; at melee (+4). Summon: Summons d3 Skeletons. Must recharge next Round, will attempt to flee to adjacent room.",
-        "description": "Once a celebrated magic-user of the world, now a bitter man who's ambition jeopardized the realm. Deeper delves into the arcane workings of evil magics put the realm at risk, and he was removed from his station. Now hides in remote lairs, building an army for revenge.",
+        "special": "Fog: Obscures vision and hinders initiative. Ice Touch: at range causes loss of footing and focus;"
+                   " at melee (+4). Summon: Summons d3 Skeletons. Must recharge next Round, will attempt to flee to"
+                   " adjacent room.",
+        "description": "Once a celebrated magic-user of the world, now a bitter man who's ambition jeopardized the"
+                       " realm. Deeper delves into the arcane workings of evil magics put the realm at risk, and he "
+                       "was removed from his station. Now hides in remote lairs, building an army for revenge.",
         "tactics": {1: "Staff", 2: "Staff", 3: "Staff", 4: "Fog", 5: "Ice Touch", 6: "Summon & Flee"}
     },
     "martin": {
@@ -638,7 +604,9 @@ BOSSES = {
         "ac": 14,
         "attacks": ["Shield (+1)", "Sword(+1)", "Grenade"],
         "special": "Grenade: retreats far as possible and tosses grenade. Accompanied: 2 Soldiers.",
-        "description": "A proud warrior who felt slighted when a promotion was not rewarded to him. Has taken to terrorizing the countryside and attacking patrols of soldiers. Not really a Captain, but this has become part of his myth.",
+        "description": "A proud warrior who felt slighted when a promotion was not rewarded to him. Has taken to "
+                       "terrorizing the countryside and attacking patrols of soldiers. Not really a Captain, but"
+                       " this has become part of his myth.",
         "tactics": {1: "Direct attack", 2: "Direct attack", 3: "Direct attack", 4: "Direct attack", 5: "Command flank",
                     6: "Grenade Toss"}
     },
@@ -647,8 +615,10 @@ BOSSES = {
         "hd": "10",
         "ac": 16,
         "attacks": ["Bite", "Poison", "Web", "Jump", "Call"],
-        "special": "Web: PC must save to break free. Jump: Jumps, out of / into range. Call: A Young Spider joins the fight. Weak against fire/cold.",
-        "description": "Said to be ancient and wise, but also cruel and bloodthirsty. Sole motive is to continue aging and growing her brood. It is said her eyes are rare fiery-red jewels worth 100 gold each.",
+        "special": "Web: PC must save to break free. Jump: Jumps, out of / into range. Call: A Young Spider joins the"
+                   " fight. Weak against fire/cold.",
+        "description": "Said to be ancient and wise, but also cruel and bloodthirsty. Sole motive is to continue aging"
+                       " and growing her brood. It is said her eyes are rare fiery-red jewels worth 100 gold each.",
         "tactics": {1: "Bite", 2: "Bite", 3: "Web", 4: "Jump", 5: "Call", 6: "Call"}
     },
     "sorlak": {
@@ -656,8 +626,11 @@ BOSSES = {
         "hd": "12",
         "ac": 19,
         "attacks": ["Staff (-1)", "Lightning (x2)", "Life Drain"],
-        "special": "Life Drain: 1 damage a turn, and gives Lich 1 life per turn. Immune: cold, lightning, poison. Reduces: blunt melee dmg -1. Weak: piercing, fire. Accompanied: 3 Zombies.",
-        "description": "A fierce undead wizard fully corrupted by the practice of dark magic. Consumes souls for power. Unleashes the undead amongst the world. Controls many minions and spies. Seeks powerful artifacts to augment its power.",
+        "special": "Life Drain: 1 damage a turn, and gives Lich 1 life per turn. Immune: cold, lightning, poison. "
+                   "Reduces: blunt melee dmg -1. Weak: piercing, fire. Accompanied: 3 Zombies.",
+        "description": "A fierce undead wizard fully corrupted by the practice of dark magic. Consumes souls for power."
+                       " Unleashes the undead amongst the world. Controls many minions and spies. Seeks powerful"
+                       " artifacts to augment its power.",
         "tactics": {1: "Staff", 2: "Staff", 3: "Lightning", 4: "Lightning", 5: "Lightning", 6: "Life Drain"}
     },
     "firebane": {
@@ -665,8 +638,12 @@ BOSSES = {
         "hd": "10",
         "ac": 17,
         "attacks": ["Claw Claw", "Bite(+3)", "Wing(+2)", "Fire Breath"],
-        "special": "Fire Breath: Range (2d6). Wing: pushes target away. Weak against his own reflection. Removing a foot will deal 3d8 damage to him. Uses his wings and flame breath to keep enemies at a distance from his vulnerable feet.",
-        "description": "Terrorizes the inner mountain ranges, though sometimes ventures out into the valleys in pursuit of smaller dragon prey. Is said to sit over the great hoard of a lost civilization. If exposed to live fire, the removed foot will transform into a small dragon egg.",
+        "special": "Fire Breath: Range (2d6). Wing: pushes target away. Weak against his own reflection. Removing a "
+                   "foot will deal 3d8 damage to him. Uses his wings and flame breath to keep enemies at a distance "
+                   "from his vulnerable feet.",
+        "description": "Terrorizes the inner mountain ranges, though sometimes ventures out into the valleys in pursuit"
+                       " of smaller dragon prey. Is said to sit over the great hoard of a lost civilization. If exposed"
+                       " to live fire, the removed foot will transform into a small dragon egg.",
         "tactics": {1: "Claw Claw", 2: "Claw Claw", 3: "Bite", 4: "Wing", 5: "Wing", 6: "Fire Breath"}
     },
     "shrieking_wight": {
@@ -674,8 +651,12 @@ BOSSES = {
         "hd": "7",
         "ac": 15,
         "attacks": ["Cold Claw", "Fearful Shriek", "Ghost Summon"],
-        "special": "Cold Claw: on a hit reduces target's level by 1. Fearful Shriek: Utters ear-shattering cry. All present must save or stand powerless next round. Ghost Summon: 1 Ghost suddenly appears next to random target dealing d3 damage, then disappears. Weak against light and healing magic. Immune to all non-magical weapons except for those forged in silver.",
-        "description": "The mourning, furious spirit of an executed leader of an ancient rebellion. Wants nothing more than to destroy his nemesis or finally rest in peace.",
+        "special": "Cold Claw: on a hit reduces target's level by 1. Fearful Shriek: Utters ear-shattering cry. All"
+                   " present must save or stand powerless next round. Ghost Summon: 1 Ghost suddenly appears next to"
+                   " random target dealing d3 damage, then disappears. Weak against light and healing magic. Immune to"
+                   " all non-magical weapons except for those forged in silver.",
+        "description": "The mourning, furious spirit of an executed leader of an ancient rebellion. Wants nothing more"
+                       " than to destroy his nemesis or finally rest in peace.",
         "tactics": {1: "Cold Claw", 2: "Cold Claw", 3: "Cold Claw", 4: "Fearful Shriek", 5: "Fearful Shriek",
                     6: "Ghost Summon"}
     }
