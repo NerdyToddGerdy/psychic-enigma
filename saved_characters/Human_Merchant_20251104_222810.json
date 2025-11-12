@@ -1,0 +1,32 @@
+{
+  "name": "Human Merchant",
+  "race": "Human",
+  "character_type": "Merchant",
+  "hp_max": 8,
+  "hp_current": 8,
+  "ac": 10,
+  "attack_bonus": 0,
+  "damage_die": "1d6",
+  "inventory": [
+    "Bandages",
+    "Ration",
+    "Ration",
+    "Waterskin",
+    "Torch"
+  ],
+  "equipment": {
+    "weapon": "Dagger (1d6)",
+    "armor": null,
+    "shield": null,
+    "helmet": null
+  },
+  "status_effects": [],
+  "traits": [
+    "Tattooed",
+    "Daring"
+  ],
+  "financial_status": "Poor",
+  "starting_silver": 10,
+  "created_at": "2025-11-04T22:28:07.882472",
+  "last_modified": "2025-11-04T22:28:07.882518"
+}

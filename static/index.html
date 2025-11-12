@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Hex Grid Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>RPG Hex Grid Explorer</h1>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Hex Grid with Tabs -->
+            <div class="hex-grid-panel">
+                <!-- Grid Tabs -->
+                <div class="grid-tabs">
+                    <button class="grid-tab active" data-tab="grid">Grid</button>
+                    <button class="grid-tab" data-tab="settings">Settings</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="grid-tab-content">
+                    <!-- Grid Tab -->
+                    <div id="gridTab" class="grid-tab-pane active">
+                        <div class="panel-header">
+                            <h2>Hex Grid</h2>
+                            <div id="playerPosition" class="player-position">
+                                Position: (0, 0)
+                            </div>
+                        </div>
+                        <div id="hexGridContainer" class="hex-grid-container">
+                            <svg id="hexGrid" viewBox="-500 -500 1000 1000">
+                                <!-- Hexes will be rendered here -->
+                            </svg>
+
+                            <!-- Current Hex Info Overlay -->
+                            <div class="current-hex-info-overlay">
+                                <div class="hex-info-header">Current Hex</div>
+                                <div id="currentHexInfo" class="hex-info">
+                                    <p>Click on a hex for details</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="settingsTab" class="grid-tab-pane">
+                        <div class="settings-content">
+                            <h2>Game Settings</h2>
+                            <div class="settings-buttons">
+                                <button id="newGameBtn" class="btn btn-primary">New Game</button>
+                                <button id="saveGameBtn" class="btn btn-secondary">Save Game</button>
+                                <button id="loadGameBtn" class="btn btn-secondary">Load Game</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Quests and Info -->
+            <div class="side-panel">
+                <!-- Character Stats Section -->
+                <div class="section character-stats-section">
+                    <h3>Character</h3>
+                    <div id="characterStats" class="character-stats-display">
+                        <p class="no-character">No character - <a href="#" id="createCharacterLink">Create one</a></p>
+                    </div>
+                    <button id="healBtn" class="btn btn-accent" disabled title="Heal at settlement (costs gold)" style="margin-top: 10px; width: 100%;">Heal</button>
+                </div>
+
+                <!-- Quests Section (Consolidated) -->
+                <div class="section quests-section-consolidated">
+                    <h3>Quests</h3>
+
+                    <!-- Generate Quest Button -->
+                    <button id="generateQuestBtn" class="btn btn-accent" style="margin-bottom: 15px; width: 100%;" disabled title="Must be in a settlement to generate quests">Generate Quest</button>
+
+                    <!-- Active Quest -->
+                    <div class="active-quest-compact">
+                        <div class="active-quest-header">Active Quest</div>
+                        <div id="activeQuest" class="active-quest">
+                            <p class="no-quest">No active quest</p>
+                        </div>
+                    </div>
+
+                    <!-- Quest Tabs -->
+                    <div class="quest-tabs">
+                        <button class="quest-tab active" data-tab="available">Available</button>
+                        <button class="quest-tab" data-tab="completed">Completed</button>
+                    </div>
+
+                    <!-- Quest Tab Content -->
+                    <div class="quest-tab-content">
+                        <div id="availableQuestsTab" class="tab-pane active">
+                            <div id="questList" class="quest-list">
+                                <p class="no-quests">No quests available. Generate one!</p>
+                            </div>
+                        </div>
+                        <div id="completedQuestsTab" class="tab-pane">
+                            <div id="completedQuestList" class="completed-quest-list">
+                                <p class="no-completed-quests">No completed quests yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Exploration Results Modal -->
+    <div id="explorationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Exploration Results</h2>
+            <div id="explorationResults" class="exploration-results">
+                <!-- Results will be populated here -->
+            </div>
+            <button class="btn btn-primary modal-close-btn">Continue</button>
+        </div>
+    </div>
+
+    <!-- Load Game Modal -->
+    <div id="loadGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Load Game</h2>
+            <div id="savesList" class="saves-list">
+                <!-- Save files will be listed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Game Modal -->
+    <div id="saveGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Save Game</h2>
+            <div class="save-form">
+                <label for="saveFilename">Save Name (optional):</label>
+                <input type="text" id="saveFilename" placeholder="Leave blank for auto-generated name">
+                <button id="confirmSaveBtn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quest Completion Modal -->
+    <div id="questCompletionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Quest Completion</h2>
+            <div id="questCompletionResults" class="quest-completion-results">
+                <!-- Results will be populated here -->
+            </div>
+            <button class="btn btn-primary modal-close-btn">Continue</button>
+        </div>
+    </div>
+
+    <!-- Dungeon Discovered Modal -->
+    <div id="dungeonDiscoveredModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Dungeon Discovered!</h2>
+            <div id="dungeonInfo" class="dungeon-info">
+                <!-- Dungeon info will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button id="enterDungeonBtn" class="btn btn-primary">Enter Dungeon</button>
+                <button class="btn btn-secondary modal-close-btn">Leave for Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dungeon Room Modal -->
+    <div id="dungeonRoomModal" class="modal">
+        <div class="modal-content">
+            <h2>Dungeon Exploration</h2>
+            <div id="dungeonRoomInfo" class="dungeon-room-info">
+                <!-- Room info will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button id="nextRoomBtn" class="btn btn-primary">Next Room</button>
+                <button id="completeDungeonBtn" class="btn btn-accent" style="display:none;">Complete Dungeon</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Treasure Overflow Modal -->
+    <div id="treasureOverflowModal" class="modal">
+        <div class="modal-content">
+            <h2>Inventory Full!</h2>
+            <div id="treasureOverflowInfo" class="treasure-overflow-info">
+                <p id="treasureFoundText">You found treasure but your inventory is full!</p>
+                <div id="newTreasureDisplay" class="new-treasure-display">
+                    <!-- New treasure will be displayed here -->
+                </div>
+                <h3>Current Inventory</h3>
+                <div id="currentInventoryList" class="inventory-grid">
+                    <!-- Current inventory items will be listed here -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="declineTreasureBtn" class="btn btn-secondary">Leave Treasure</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day End Ration Modal -->
+    <div id="rationPromptModal" class="modal">
+        <div class="modal-content">
+            <h2>Day's End</h2>
+            <div id="rationPromptInfo" class="ration-prompt-info">
+                <p>The day is over and you're weary from travel.</p>
+                <p id="rationHealText">Would you like to consume a ration to recover some health?</p>
+            </div>
+            <div class="modal-actions">
+                <button id="consumeRationBtn" class="btn btn-primary">Consume Ration</button>
+                <button id="declineRationBtn" class="btn btn-secondary">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combat Modal -->
+    <div id="combatModal" class="modal combat-modal">
+        <div class="modal-content">
+            <h2>Combat!</h2>
+
+            <!-- Player Status -->
+            <div class="combat-player-status">
+                <h3><span id="combatPlayerName">Hero</span></h3>
+                <div class="hp-bar-container">
+                    <div class="hp-bar">
+                        <div id="playerHpBar" class="hp-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="playerHpText" class="hp-text">10/10 HP</span>
+                </div>
+                <div id="playerStatusEffects" class="status-effects">
+                    <!-- Status effects will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Monsters -->
+            <div id="monstersContainer" class="monsters-container">
+                <!-- Monster cards will be dynamically added here -->
+            </div>
+
+            <!-- Combat Log -->
+            <div class="combat-log-container">
+                <h4>Combat Log</h4>
+                <div id="combatLog" class="combat-log">
+                    <!-- Combat messages will appear here -->
+                </div>
+            </div>
+
+            <!-- Combat Actions -->
+            <div class="combat-actions">
+                <button id="combatAttackBtn" class="btn btn-primary">Attack</button>
+                <button id="combatItemBtn" class="btn btn-secondary">Use Item</button>
+                <button id="combatFleeBtn" class="btn btn-danger">Flee</button>
+            </div>
+
+            <!-- Combat Result (shown on victory/defeat) -->
+            <div id="combatResult" class="combat-result" style="display:none;">
+                <h3 id="combatResultTitle">Victory!</h3>
+                <div id="combatResultContent">
+                    <!-- Result details -->
+                </div>
+                <button id="combatContinueBtn" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Creation Modal -->
+    <div id="characterModal" class="modal">
+        <div class="modal-content character-modal">
+            <span class="close">&times;</span>
+            <h2>Character Management</h2>
+
+            <!-- Current Character Display -->
+            <div id="currentCharacter" class="current-character" style="display:none;">
+                <h3>Current Character</h3>
+                <div class="character-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Name:</span>
+                        <span id="charName">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Race:</span>
+                        <span id="charRace">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Class:</span>
+                        <span id="charClass">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">HP:</span>
+                        <span id="charHP">-/-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">AC:</span>
+                        <span id="charAC">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Attack:</span>
+                        <span id="charAttack">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Weapon:</span>
+                        <span id="charWeapon">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Armor:</span>
+                        <span id="charArmor">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Creation Options -->
+            <div id="characterOptions" class="character-options">
+                <h3>Create New Character</h3>
+
+                <!-- Random Character -->
+                <div class="character-option">
+                    <h4>Random Character</h4>
+                    <p>Generate a random character using game tables</p>
+                    <input type="text" id="randomCharName" placeholder="Character Name (optional)">
+                    <button id="createRandomBtn" class="btn btn-primary">Generate Random</button>
+                </div>
+
+                <!-- Custom Character -->
+                <div class="character-option">
+                    <h4>Custom Character</h4>
+                    <p>Create a custom character with specific stats</p>
+                    <div class="custom-char-form">
+                        <input type="text" id="customCharName" placeholder="Name" required>
+                        <input type="text" id="customCharRace" placeholder="Race (default: Human)">
+                        <input type="text" id="customCharClass" placeholder="Class (default: Adventurer)">
+                        <input type="number" id="customCharHP" placeholder="HP (default: 10)" min="1">
+                        <input type="number" id="customCharAC" placeholder="AC (default: 10)" min="1">
+                        <input type="number" id="customCharAttack" placeholder="Attack Bonus (default: 0)">
+                        <input type="text" id="customCharWeapon" placeholder="Weapon (optional)">
+                        <input type="text" id="customCharArmor" placeholder="Armor (optional)">
+                        <button id="createCustomBtn" class="btn btn-primary">Create Custom</button>
+                    </div>
+                </div>
+
+                <!-- Load Saved Character -->
+                <div class="character-option">
+                    <h4>Load Saved Character</h4>
+                    <p>Choose from previously saved characters</p>
+                    <div id="savedCharactersList" class="saved-characters-list">
+                        <p class="loading-text">Loading characters...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="modal-actions">
+                <button id="saveCharacterBtn" class="btn btn-secondary" style="display:none;">Save Character</button>
+                <button class="btn btn-primary modal-close-btn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Action</h2>
+            <p id="confirmMessage"></p>
+            <div class="modal-actions">
+                <button id="confirmYesBtn" class="btn btn-primary">Confirm</button>
+                <button id="confirmNoBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Selection Modal -->
+    <div id="itemSelectionModal" class="modal">
+        <div class="modal-content">
+            <h2>Select Item</h2>
+            <div id="itemSelectionList" class="item-selection-list">
+                <!-- Items will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button id="itemSelectionCancelBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/hex_renderer.js"></script>
+    <script src="js/game_client.js"></script>
+    <script src="js/quest_manager.js"></script>
+    <script src="js/character_manager.js"></script>
+    <script src="js/combat_ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

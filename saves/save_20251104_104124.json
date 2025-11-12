@@ -1,0 +1,196 @@
+{
+  "version": "1.0",
+  "timestamp": "2025-11-04T10:41:24.634314",
+  "hex_grid": {
+    "player_position": [
+      2,
+      -2
+    ],
+    "hexes": {
+      "0,0": {
+        "q": 0,
+        "r": 0,
+        "terrain": "Village",
+        "weather": "Rain",
+        "water": true,
+        "revealed": false,
+        "explored": true,
+        "is_settlement": true,
+        "discoveries": [],
+        "dangers": []
+      },
+      "0,-1": {
+        "q": 0,
+        "r": -1,
+        "terrain": "Mountains",
+        "weather": "Thunderstorm",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "1,-1": {
+        "q": 1,
+        "r": -1,
+        "terrain": "Grasslands",
+        "weather": "Fog",
+        "water": true,
+        "revealed": true,
+        "explored": true,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": [
+          {
+            "type": "Hazard",
+            "detail": "Resources"
+          }
+        ]
+      },
+      "1,0": {
+        "q": 1,
+        "r": 0,
+        "terrain": "Wasteland",
+        "weather": "Snow",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "0,1": {
+        "q": 0,
+        "r": 1,
+        "terrain": "Hills",
+        "weather": "Thunderstorm",
+        "water": true,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "-1,1": {
+        "q": -1,
+        "r": 1,
+        "terrain": "Swamp",
+        "weather": "Rain",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "-1,0": {
+        "q": -1,
+        "r": 0,
+        "terrain": "Mountains",
+        "weather": "Sunny",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "2,-2": {
+        "q": 2,
+        "r": -2,
+        "terrain": "Woods",
+        "weather": "Overcast",
+        "water": true,
+        "revealed": true,
+        "explored": true,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": [
+          {
+            "type": "Hostile",
+            "detail": "Humanoid"
+          }
+        ]
+      },
+      "1,-2": {
+        "q": 1,
+        "r": -2,
+        "terrain": "Swamp",
+        "weather": "Snow",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "2,-1": {
+        "q": 2,
+        "r": -1,
+        "terrain": "Mountains",
+        "weather": "Snow",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "2,-3": {
+        "q": 2,
+        "r": -3,
+        "terrain": "Woods",
+        "weather": "Snow",
+        "water": true,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "3,-3": {
+        "q": 3,
+        "r": -3,
+        "terrain": "Woods",
+        "weather": "Sunny",
+        "water": false,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      },
+      "3,-2": {
+        "q": 3,
+        "r": -2,
+        "terrain": "Wasteland",
+        "weather": "Snow",
+        "water": true,
+        "revealed": true,
+        "explored": false,
+        "is_settlement": false,
+        "discoveries": [],
+        "dangers": []
+      }
+    }
+  },
+  "quests": [
+    {
+      "action": "Deliver",
+      "target": "Enemy",
+      "where": "Ruin",
+      "opposition": "Rivals",
+      "source": "Friend",
+      "reward": "Gold",
+      "description": "You must deliver a enemy at ruin held by rivals. Request was given by friend and offered gold. The location is 2 hexes northeast.",
+      "direction": "Northeast",
+      "distance": 2,
+      "coordinates": [
+        2,
+        -2
+      ]
+    }
+  ],
+  "active_quest_index": 0
+}
