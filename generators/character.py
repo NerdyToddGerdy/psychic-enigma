@@ -130,6 +130,16 @@ class Player:
         self.last_modified = datetime.now().isoformat()
         return actual_healing
 
+    @property
+    def is_alive(self) -> bool:
+        """
+        Check if character is alive.
+
+        Returns:
+            True if character is alive (not dying and has HP > 0)
+        """
+        return not self.is_dying and self.hp_current > 0
+
     def add_status_effect(self, effect_name: str, duration: int = -1, **kwargs):
         """
         Add a status effect to the player.

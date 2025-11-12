@@ -8,13 +8,14 @@ from datetime import datetime
 from generators.hex_grid import HexGrid
 from generators.quest_generator import Quest
 from generators.character import Player
+from version import SAVE_VERSION
 
 
 class GameState:
     """Represents the complete game state"""
 
     def __init__(self, hex_grid=None, quests=None, active_quest_index=None, completed_quests=None, player=None,
-                 active_combat=None, current_day=1, movement_count=0):
+                 active_combat=None, current_day=1, movement_count=0, game_over=False, game_over_reason=None):
         """
         Initialize game state.
 
@@ -27,6 +28,8 @@ class GameState:
             active_combat (CombatEncounter, optional): Active combat encounter
             current_day (int): Current day number (starts at 1)
             movement_count (int): Number of movements since last day increment (0-4)
+            game_over (bool): Whether the game has ended
+            game_over_reason (str, optional): Reason for game over
         """
         self.hex_grid = hex_grid if hex_grid else HexGrid()
         self.quests = quests if quests else []
@@ -36,6 +39,8 @@ class GameState:
         self.active_combat = active_combat  # None when not in combat
         self.current_day = current_day  # Day counter (every 5 hex movements = 1 day)
         self.movement_count = movement_count  # Movements since last day (0-4)
+        self.game_over = game_over  # Game over flag
+        self.game_over_reason = game_over_reason  # Reason for game over
 
     @property
     def active_quest(self):
@@ -52,7 +57,7 @@ class GameState:
             dict: Serializable game state
         """
         data = {
-            "version": "1.2",  # Bumped version for day counter fields
+            "version": SAVE_VERSION,
             "timestamp": datetime.now().isoformat(),
             "hex_grid": self.hex_grid.to_dict(),
             "quests": [quest.to_dict() for quest in self.quests],
@@ -62,6 +67,8 @@ class GameState:
             "active_combat": self.active_combat.to_dict() if self.active_combat else None,
             "current_day": self.current_day,
             "movement_count": self.movement_count,
+            "game_over": self.game_over,
+            "game_over_reason": self.game_over_reason,
         }
         return data
 
@@ -96,8 +103,12 @@ class GameState:
         current_day = data.get("current_day", 1)
         movement_count = data.get("movement_count", 0)
 
+        # Load game over fields (with defaults for backward compatibility)
+        game_over = data.get("game_over", False)
+        game_over_reason = data.get("game_over_reason", None)
+
         return cls(hex_grid, quests, active_quest_index, completed_quests, player, active_combat, current_day,
-                   movement_count)
+                   movement_count, game_over, game_over_reason)
 
 
 def save_game(game_state, filename=None, save_dir="saves"):

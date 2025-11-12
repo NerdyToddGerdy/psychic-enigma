@@ -28,10 +28,33 @@ window.refreshGameState = async function() {
 };
 
 /**
+ * Load and display game version
+ */
+async function loadVersion() {
+    try {
+        const response = await fetch('/api/version');
+        const versionInfo = await response.json();
+        const versionEl = document.getElementById('gameVersion');
+        if (versionEl && versionInfo.version) {
+            versionEl.textContent = `v${versionInfo.version}`;
+        }
+    } catch (error) {
+        console.error('Failed to load version:', error);
+        const versionEl = document.getElementById('gameVersion');
+        if (versionEl) {
+            versionEl.textContent = 'v0.2.0';
+        }
+    }
+}
+
+/**
  * Initialize application
  */
 async function init() {
     try {
+        // Load and display version
+        loadVersion();
+
         // Load current game state
         const response = await gameClient.getState();
         updateUI(response.state);
@@ -454,6 +477,12 @@ function setupEventHandlers() {
 function updateUI(state) {
     if (!state) {
         console.error('State is null or undefined');
+        return;
+    }
+
+    // Check for game over
+    if (state.game_over) {
+        showGameOver(state.game_over_reason);
         return;
     }
 
@@ -1003,6 +1032,27 @@ function showError(message) {
 }
 
 /**
+ * Show game over modal
+ */
+function showGameOver(reason) {
+    const modal = document.getElementById('gameOverModal');
+    const messageEl = document.getElementById('gameOverMessage');
+
+    messageEl.innerHTML = `
+        <p style="font-size: 18px; margin: 20px 0; text-align: center;">${reason || 'Your adventure has ended.'}</p>
+        <p style="text-align: center;">Your character has fallen. Start a new game or load a previous save.</p>
+    `;
+
+    // Show the modal
+    modal.classList.add('show');
+
+    // Disable all action buttons except new game and load
+    document.querySelectorAll('button:not(#gameOverNewGameBtn):not(#gameOverLoadBtn)').forEach(btn => {
+        btn.disabled = true;
+    });
+}
+
+/**
  * Show dungeon discovered modal
  */
 function showDungeonDiscovered(dungeon) {
@@ -1361,4 +1411,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup treasure overflow handlers
     document.getElementById('declineTreasureBtn').addEventListener('click', handleDeclineTreasure);
+
+    // Setup game over modal handlers
+    document.getElementById('gameOverNewGameBtn').addEventListener('click', () => {
+        window.location.reload(); // Reload page to start new game
+    });
+    document.getElementById('gameOverLoadBtn').addEventListener('click', () => {
+        const modal = document.getElementById('gameOverModal');
+        modal.classList.remove('show');
+        showModal('loadGameModal'); // Show load game modal
+    });
 });

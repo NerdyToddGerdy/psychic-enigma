@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 from api.game_state import GameManager
+from version import VERSION_INFO
 
 # Initialize Flask app
 app = Flask(__name__,
@@ -34,6 +35,12 @@ def serve_assets(filename):
 
 
 # API Endpoints
+
+@app.route('/api/version', methods=['GET'])
+def get_version():
+    """Get game version information"""
+    return jsonify(VERSION_INFO)
+
 
 @app.route('/api/game/new', methods=['POST'])
 def new_game():

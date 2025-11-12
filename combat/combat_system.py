@@ -358,9 +358,22 @@ class CombatEncounter:
             # Make attack
             self._monster_attack(monster)
 
+            # BUG FIX: If player dropped to 0 HP, check_combat_end will trigger death save
+            # Break loop immediately after death save (successful or not) to give player a turn
+            player_made_death_save = self.player.hp_current <= 0
+
             # Check if combat ended (player defeated)
             self.check_combat_end()
             if self.is_combat_over():
+                break
+
+            # Break loop if death save occurred (even if successful)
+            # This gives player a turn to flee/heal before taking more hits
+            if player_made_death_save:
+                self._log_message(
+                    f"{self.player.name} narrowly survives! Monster attacks end for this turn.",
+                    "special"
+                )
                 break
 
         # End turn

@@ -71,7 +71,9 @@ class GameManager:
             "active_combat": self.game_state.active_combat.get_combat_status()
             if self.game_state.active_combat else None,
             "current_day": self.game_state.current_day,
-            "movement_count": self.game_state.movement_count
+            "movement_count": self.game_state.movement_count,
+            "game_over": self.game_state.game_over,
+            "game_over_reason": self.game_state.game_over_reason
         }
 
     def _hex_to_client_format(self, hex_obj):
@@ -265,8 +267,12 @@ class GameManager:
             dict: Generated quest with index
 
         Raises:
-            ValueError: If not in a settlement
+            ValueError: If not in a settlement or game is over
         """
+        # Check if game is over
+        if self.game_state.game_over:
+            raise ValueError("Game over - cannot perform actions")
+
         # Check if player is in a settlement
         current_hex = self.game_state.hex_grid.get_current_hex()
 
@@ -441,8 +447,12 @@ class GameManager:
             dict: Movement results including exploration
 
         Raises:
-            ValueError: If hex is not revealed or reachable
+            ValueError: If hex is not revealed or reachable or game is over
         """
+        # Check if game is over
+        if self.game_state.game_over:
+            raise ValueError("Game over - cannot perform actions")
+
         target_hex = self.game_state.hex_grid.get_hex_at(q, r)
 
         # Check if hex exists and is revealed
@@ -743,8 +753,12 @@ class GameManager:
             dict: Dungeon entry result
 
         Raises:
-            ValueError: If no dungeon available
+            ValueError: If no dungeon available or game is over
         """
+        # Check if game is over
+        if self.game_state.game_over:
+            raise ValueError("Game over - cannot perform actions")
+
         if not self.game_state.active_quest:
             raise ValueError("No active quest")
 
@@ -1409,8 +1423,12 @@ class GameManager:
             dict: Attack result
 
         Raises:
-            ValueError: If not in combat or not player's turn
+            ValueError: If not in combat or not player's turn or game is over
         """
+        # Check if game is over
+        if self.game_state.game_over:
+            raise ValueError("Game over - cannot perform actions")
+
         if not self.game_state.active_combat:
             # Return graceful response if combat already ended (race condition)
             return {
@@ -1457,7 +1475,10 @@ class GameManager:
             elif combat.combat_result == CombatResult.DEFEAT:
                 # PDF: Death save already handled in combat system
                 # Player is either at 1 HP (save success) or dying (save failed)
-                pass
+                # Check if player failed death save and is dying
+                if self.game_state.player and self.game_state.player.is_dying:
+                    self.game_state.game_over = True
+                    self.game_state.game_over_reason = "You have died from your wounds."
 
             self.game_state.active_combat = None
 
@@ -1577,9 +1598,20 @@ class GameManager:
             # PDF: Death save already handled in combat system
             # Player is either at 1 HP (save success) or dying (save failed)
             if combat.combat_result == CombatResult.DEFEAT:
-                pass
+                # Check if player failed death save and is dying
+                if self.game_state.player and self.game_state.player.is_dying:
+                    self.game_state.game_over = True
+                    self.game_state.game_over_reason = "You have died from your wounds."
 
             self.game_state.active_combat = None
+
+            # BUG FIX: If fled from dungeon combat, clear monsters from room to prevent auto-retrigger
+            if result.get("fled"):
+                quest = self.game_state.active_quest
+                if quest and quest.dungeon and quest.dungeon.entered and quest.dungeon.grid:
+                    current_room = quest.dungeon.grid.get_current_room()
+                    if current_room:
+                        current_room.monsters = []
 
         # Execute monster turn if failed to flee
         if not result.get("fled", False) and not combat.is_combat_over():

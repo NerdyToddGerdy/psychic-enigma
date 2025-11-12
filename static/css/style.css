@@ -31,7 +31,14 @@ header {
 
 header h1 {
     color: #2a5298;
-    margin-bottom: 0;
+    margin-bottom: 5px;
+}
+
+.game-version {
+    color: #666;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 5px;
 }
 
 /* Buttons */

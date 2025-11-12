@@ -11,6 +11,7 @@
         <!-- Header -->
         <header>
             <h1>RPG Hex Grid Explorer</h1>
+            <div id="gameVersion" class="game-version">Loading...</div>
         </header>
 
         <div class="main-content">
@@ -271,6 +272,20 @@
                     <!-- Result details -->
                 </div>
                 <button id="combatContinueBtn" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 id="gameOverTitle" style="color: #f44336;">💀 Game Over</h2>
+            <div id="gameOverMessage" class="game-over-message">
+                <!-- Game over details will be populated here -->
+            </div>
+            <div class="modal-actions">
+                <button id="gameOverNewGameBtn" class="btn btn-primary">New Game</button>
+                <button id="gameOverLoadBtn" class="btn btn-secondary">Load Game</button>
             </div>
         </div>
     </div>

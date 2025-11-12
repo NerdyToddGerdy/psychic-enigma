@@ -449,7 +449,11 @@ class CombatManager {
 
             // Check dying status
             if (combatData.player && combatData.player.is_dying) {
-                content += '<p style="color: #f44336; font-weight: bold;">⚠️ You are dying! Seek help within 1 hour!</p>';
+                content += '<div style="margin: 15px 0; padding: 15px; background: rgba(244, 67, 54, 0.2); border: 2px solid #f44336; border-radius: 5px;">';
+                content += '<p style="color: #f44336; font-size: 20px; font-weight: bold; text-align: center; margin: 0;">💀 GAME OVER</p>';
+                content += '<p style="text-align: center; margin: 10px 0;">You have died from your wounds.</p>';
+                content += '<p style="text-align: center; margin: 0;"><em>The adventure ends here...</em></p>';
+                content += '</div>';
             } else {
                 content += '<p><em>You manage to escape and recover some health...</em></p>';
             }
