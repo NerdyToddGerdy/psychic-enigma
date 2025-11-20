@@ -47,13 +47,24 @@ class CharacterManager {
     /**
      * Show the character modal
      */
-    showModal() {
+    async showModal() {
         this.modal.style.display = 'block';
         this.loadSavedCharacters();
 
-        // Show current character if exists, otherwise show options
-        if (this.currentCharacter) {
-            this.displayCurrentCharacter();
+        // Get current game state to check party size
+        const state = await this.gameClient.getGameState();
+        const party = state?.party || [];
+        const partySize = party.length;
+
+        // Show party members and creation options based on party size
+        if (partySize > 0) {
+            this.displayParty(party, partySize);
+            // Show/hide creation options based on party size
+            if (partySize < 3) {
+                document.getElementById('characterOptions').style.display = 'block';
+            } else {
+                document.getElementById('characterOptions').style.display = 'none';
+            }
         } else {
             document.getElementById('currentCharacter').style.display = 'none';
             document.getElementById('characterOptions').style.display = 'block';
@@ -78,13 +89,18 @@ class CharacterManager {
 
             if (response.success) {
                 this.currentCharacter = response.character;
-                this.displayCurrentCharacter();
-                this.showNotification('Random character created!', 'success');
+
+                // Show success with party size info
+                const partySize = response.party_size || 1;
+                this.showNotification(`Character created! Party: ${partySize}/3`, 'success');
 
                 // Refresh game state to update everything
                 if (window.refreshGameState) {
                     await window.refreshGameState();
                 }
+
+                // Refresh modal to show updated party
+                await this.showModal();
             } else {
                 this.showNotification('Failed to create character: ' + response.error, 'error');
             }
@@ -104,15 +120,54 @@ class CharacterManager {
             return;
         }
 
+        // Collect ability scores with validation (3-18 range)
+        const strength = parseInt(document.getElementById('customCharSTR').value) || 10;
+        const dexterity = parseInt(document.getElementById('customCharDEX').value) || 10;
+        const willpower = parseInt(document.getElementById('customCharWIL').value) || 10;
+        const toughness = parseInt(document.getElementById('customCharTOU').value) || 10;
+
+        // Validate ability scores are in range
+        const abilityScores = [
+            { name: 'Strength', value: strength },
+            { name: 'Dexterity', value: dexterity },
+            { name: 'Willpower', value: willpower },
+            { name: 'Toughness', value: toughness }
+        ];
+
+        for (const ability of abilityScores) {
+            if (ability.value < 3 || ability.value > 18) {
+                this.showNotification(`${ability.name} must be between 3 and 18`, 'error');
+                return;
+            }
+        }
+
         const characterData = {
             name: name,
             race: document.getElementById('customCharRace').value.trim() || 'Human',
             character_type: document.getElementById('customCharClass').value.trim() || 'Adventurer',
-            hp: parseInt(document.getElementById('customCharHP').value) || 10,
-            ac: parseInt(document.getElementById('customCharAC').value) || 10,
-            attack_bonus: parseInt(document.getElementById('customCharAttack').value) || 0,
+
+            // Core ability scores (will auto-calculate HP, AC, attack)
+            strength: strength,
+            dexterity: dexterity,
+            willpower: willpower,
+            toughness: toughness,
+
+            // Special skill
+            special_skill: document.getElementById('customCharSkill').value || undefined,
+
+            // Equipment
             weapon: document.getElementById('customCharWeapon').value.trim() || undefined,
-            armor: document.getElementById('customCharArmor').value.trim() || undefined
+            armor: document.getElementById('customCharArmor').value.trim() || undefined,
+            shield: document.getElementById('customCharShield').value.trim() || undefined,
+            helmet: document.getElementById('customCharHelmet').value.trim() || undefined,
+
+            // Progression
+            level: parseInt(document.getElementById('customCharLevel').value) || 1,
+            xp: parseInt(document.getElementById('customCharXP').value) || 0,
+
+            // Currency
+            gold: parseInt(document.getElementById('customCharGold').value) || 0,
+            silver: parseInt(document.getElementById('customCharSilver').value) || 0
         };
 
         try {
@@ -120,8 +175,10 @@ class CharacterManager {
 
             if (response.success) {
                 this.currentCharacter = response.character;
-                this.displayCurrentCharacter();
-                this.showNotification('Custom character created!', 'success');
+
+                // Show success with party size info
+                const partySize = response.party_size || 1;
+                this.showNotification(`Character created! Party: ${partySize}/3`, 'success');
 
                 // Clear form
                 this.clearCustomForm();
@@ -130,6 +187,9 @@ class CharacterManager {
                 if (window.refreshGameState) {
                     await window.refreshGameState();
                 }
+
+                // Refresh modal to show updated party
+                await this.showModal();
             } else {
                 this.showNotification('Failed to create character: ' + response.error, 'error');
             }
@@ -227,7 +287,51 @@ class CharacterManager {
     }
 
     /**
-     * Display the current character stats
+     * Display the party members
+     */
+    displayParty(party, partySize) {
+        const container = document.getElementById('currentCharacter');
+
+        if (!party || party.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Build HTML for all party members
+        let partyHTML = `<h3>Party (${partySize}/3)</h3>`;
+
+        party.forEach((char, index) => {
+            partyHTML += `
+                <div class="party-member" style="margin-bottom: 15px; padding: 10px; background: #2a2a2a; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${char.name}</strong> - Level ${char.level || 1}
+                            <div style="font-size: 12px; color: #888;">
+                                ${char.race} ${char.character_type}
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 12px;">
+                            <div>HP: ${char.hp_current}/${char.hp_max}</div>
+                            <div>AC: ${char.ac} | ATK: +${char.attack_bonus}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (partySize < 3) {
+            partyHTML += `<p style="color: #888; font-size: 12px; margin-top: 10px;">You can add ${3 - partySize} more character${3 - partySize !== 1 ? 's' : ''} to your party.</p>`;
+        } else {
+            partyHTML += `<p style="color: #888; font-size: 12px; margin-top: 10px;">Your party is full (3/3).</p>`;
+        }
+
+        container.innerHTML = partyHTML;
+        container.style.display = 'block';
+        document.getElementById('saveCharacterBtn').style.display = 'inline-block';
+    }
+
+    /**
+     * Display the current character stats (legacy, now uses displayParty)
      */
     displayCurrentCharacter() {
         if (!this.currentCharacter) return;
@@ -244,9 +348,8 @@ class CharacterManager {
         document.getElementById('charWeapon').textContent = char.equipment?.weapon || '-';
         document.getElementById('charArmor').textContent = char.equipment?.armor || '-';
 
-        // Show character display, hide options
+        // Show character display, don't hide options anymore (party system handles it)
         document.getElementById('currentCharacter').style.display = 'block';
-        document.getElementById('characterOptions').style.display = 'none';
         document.getElementById('saveCharacterBtn').style.display = 'inline-block';
     }
 
@@ -267,11 +370,29 @@ class CharacterManager {
         document.getElementById('customCharName').value = '';
         document.getElementById('customCharRace').value = '';
         document.getElementById('customCharClass').value = '';
-        document.getElementById('customCharHP').value = '';
-        document.getElementById('customCharAC').value = '';
-        document.getElementById('customCharAttack').value = '';
+
+        // Clear ability scores
+        document.getElementById('customCharSTR').value = '';
+        document.getElementById('customCharDEX').value = '';
+        document.getElementById('customCharWIL').value = '';
+        document.getElementById('customCharTOU').value = '';
+
+        // Clear special skill
+        document.getElementById('customCharSkill').value = '';
+
+        // Clear equipment
         document.getElementById('customCharWeapon').value = '';
         document.getElementById('customCharArmor').value = '';
+        document.getElementById('customCharShield').value = '';
+        document.getElementById('customCharHelmet').value = '';
+
+        // Clear progression
+        document.getElementById('customCharLevel').value = '';
+        document.getElementById('customCharXP').value = '';
+
+        // Clear currency
+        document.getElementById('customCharGold').value = '';
+        document.getElementById('customCharSilver').value = '';
     }
 
     /**

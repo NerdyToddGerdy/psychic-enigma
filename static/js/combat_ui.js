@@ -127,8 +127,13 @@ class CombatManager {
      * Render combat UI with current combat data
      */
     renderCombat(combatData) {
-        // Render player status
-        this.renderPlayerStatus(combatData.player);
+        // Render party status (all members if party exists, otherwise single player)
+        if (combatData.party && combatData.party.length > 0) {
+            this.renderPartyStatus(combatData.party);
+        } else {
+            // Legacy single player
+            this.renderPlayerStatus(combatData.player);
+        }
 
         // Render monsters
         this.renderMonsters(combatData.monsters);
@@ -136,8 +141,10 @@ class CombatManager {
         // Render combat log
         this.renderCombatLog(combatData.combat_log);
 
-        // Render player status effects
-        this.renderStatusEffects(combatData.player);
+        // Render player status effects (for active character)
+        if (combatData.player) {
+            this.renderStatusEffects(combatData.player);
+        }
 
         // Check if combat is over
         if (combatData.is_over) {
@@ -146,7 +153,43 @@ class CombatManager {
     }
 
     /**
-     * Render player status (HP bar)
+     * Render party status (all party members)
+     */
+    renderPartyStatus(party) {
+        const container = document.getElementById('playerStatusContainer');
+
+        let partyHTML = '<h3 style="margin: 0 0 10px 0;">Party</h3>';
+
+        party.forEach((character, index) => {
+            const hpPercent = (character.hp_current / character.hp_max) * 100;
+            let hpColor = '#4CAF50';
+            if (hpPercent <= 25) {
+                hpColor = '#f44336';
+            } else if (hpPercent <= 50) {
+                hpColor = '#FF9800';
+            }
+
+            partyHTML += `
+                <div class="party-member-combat" style="margin-bottom: 10px; padding: 8px; background: #1e1e1e; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <strong style="font-size: 14px;">${character.name}</strong>
+                        <span style="font-size: 12px; color: #888;">AC ${character.ac}</span>
+                    </div>
+                    <div class="hp-bar-container">
+                        <div class="hp-bar">
+                            <div class="hp-fill" style="width: ${hpPercent}%; background: ${hpColor};"></div>
+                        </div>
+                        <span class="hp-text">${character.hp_current}/${character.hp_max} HP</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = partyHTML;
+    }
+
+    /**
+     * Render player status (HP bar) - Legacy single player
      */
     renderPlayerStatus(player) {
         document.getElementById('combatPlayerName').textContent = player.name;

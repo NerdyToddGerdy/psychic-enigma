@@ -33,18 +33,30 @@ class CombatResult(Enum):
 
 
 class CombatEncounter:
-    """Turn-based combat encounter manager"""
+    """Turn-based combat encounter manager with party support"""
 
-    def __init__(self, player: Player, monsters: List[Monster]):
+    def __init__(self, player: Player = None, monsters: List[Monster] = None, party: List[Player] = None):
         """
         Initialize a combat encounter.
 
         Args:
-            player: Player character
+            player: Player character (deprecated, use party instead)
             monsters: List of Monster instances
+            party: List of party members (new party system)
         """
-        self.player = player
-        self.monsters = monsters
+        # Support both old single-player and new party system
+        if party:
+            self.party = party
+            self.player = party[0] if party else None  # Active character for backwards compatibility
+        elif player:
+            # Legacy single player mode
+            self.party = [player]
+            self.player = player
+        else:
+            self.party = []
+            self.player = None
+
+        self.monsters = monsters if monsters else []
         self.turn_number = 0
         self.combat_result = CombatResult.IN_PROGRESS
         self.combat_log: List[Dict] = []
@@ -54,8 +66,13 @@ class CombatEncounter:
         self.loot: List[str] = []
 
         # Add initial log entry
-        monster_names = ", ".join(m.name for m in monsters)
-        self._log_message(f"Combat started! {player.name} vs {monster_names}")
+        if self.player and self.monsters:
+            monster_names = ", ".join(m.name for m in monsters)
+            if len(self.party) > 1:
+                party_names = ", ".join(p.name for p in self.party)
+                self._log_message(f"Combat started! Party ({party_names}) vs {monster_names}")
+            else:
+                self._log_message(f"Combat started! {self.player.name} vs {monster_names}")
 
     def _log_message(self, message: str, message_type: str = "info"):
         """
@@ -115,8 +132,8 @@ class CombatEncounter:
 
     def _award_xp(self):
         """
-        Award XP to player for defeating all monsters.
-        PDF Rule: 1 XP per enemy defeated
+        Award XP to all party members for defeating all monsters.
+        PDF Rule: 1 XP per enemy defeated (awarded to each party member)
         """
         total_xp = 0
 
@@ -126,22 +143,28 @@ class CombatEncounter:
                 total_xp += 1
 
         if total_xp > 0:
-            levels_gained = self.player.gain_xp(total_xp)
+            # Debug: Log party size
+            print(f"[XP AWARD DEBUG] Party size: {len(self.party)}, Total XP: {total_xp}")
 
-            if levels_gained:
-                # Player leveled up!
-                for level in levels_gained:
+            # Award XP to all party members
+            for party_member in self.party:
+                print(f"[XP AWARD DEBUG] Awarding {total_xp} XP to {party_member.name}")
+                levels_gained = party_member.gain_xp(total_xp)
+
+                if levels_gained:
+                    # Party member leveled up!
+                    for level in levels_gained:
+                        self._log_message(
+                            f"{party_member.name} gained {total_xp} XP and reached LEVEL {level}!",
+                            "result"
+                        )
+                else:
+                    # No level up, just XP gain
+                    xp_to_next = party_member.get_xp_for_next_level() - party_member.xp_current
                     self._log_message(
-                        f"{self.player.name} gained {total_xp} XP and reached LEVEL {level}!",
+                        f"{party_member.name} gained {total_xp} XP! ({xp_to_next} XP to next level)",
                         "result"
                     )
-            else:
-                # No level up, just XP gain
-                xp_to_next = self.player.get_xp_for_next_level() - self.player.xp_current
-                self._log_message(
-                    f"{self.player.name} gained {total_xp} XP! ({xp_to_next} XP to next level)",
-                    "result"
-                )
 
     def _roll_all_loot(self):
         """Roll loot for all defeated monsters"""
@@ -639,18 +662,30 @@ class CombatEncounter:
         """
         alive_monsters = self.get_alive_monsters()
 
+        # Build party status
+        party_status = []
+        for party_member in self.party:
+            party_status.append({
+                "name": party_member.name,
+                "hp_current": party_member.hp_current,
+                "hp_max": party_member.hp_max,
+                "ac": party_member.ac,
+                "status_effects": party_member.status_effects,
+            })
+
         return {
             "turn_number": self.turn_number,
             "is_player_turn": self.is_player_turn,
             "combat_result": self.combat_result.value,
             "is_over": self.is_combat_over(),
-            "player": {
+            "player": {  # Active character (backwards compatibility)
                 "name": self.player.name,
                 "hp_current": self.player.hp_current,
                 "hp_max": self.player.hp_max,
                 "ac": self.player.ac,
                 "status_effects": self.player.status_effects,
-            },
+            } if self.player else None,
+            "party": party_status,  # All party members
             "monsters": [
                 {
                     "name": m.name,
@@ -682,7 +717,8 @@ class CombatEncounter:
             "turn_number": self.turn_number,
             "is_player_turn": self.is_player_turn,
             "combat_result": self.combat_result.value,
-            "player": self.player.to_dict(),
+            "player": self.player.to_dict() if self.player else None,  # Backwards compatibility
+            "party": [p.to_dict() for p in self.party] if self.party else [],  # New party system
             "monsters": [m.to_dict() for m in self.monsters],
             "combat_log": self.combat_log,
             "loot": serialized_loot,
@@ -695,10 +731,18 @@ class CombatEncounter:
         from generators.monster import Monster
         from generators.item import Item
 
-        player = Player.from_dict(data["player"])
+        # Load party if present (new system), otherwise load single player (legacy)
+        party = None
+        player = None
+
+        if data.get("party"):
+            party = [Player.from_dict(p) for p in data["party"]]
+        elif data.get("player"):
+            player = Player.from_dict(data["player"])
+
         monsters = [Monster.from_dict(m) for m in data["monsters"]]
 
-        encounter = cls(player, monsters)
+        encounter = cls(player=player, monsters=monsters, party=party)
         encounter.turn_number = data["turn_number"]
         encounter.is_player_turn = data["is_player_turn"]
         encounter.combat_result = CombatResult(data["combat_result"])

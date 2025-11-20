@@ -8,17 +8,17 @@ Game Version Information
 # PATCH: Bug fixes, backward compatible
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 2
+VERSION_MINOR = 4
 VERSION_PATCH = 0
 
 # Full version string
 VERSION = f"{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}"
 
 # Save file version (increment when save format changes)
-SAVE_VERSION = "1.3"
+SAVE_VERSION = "1.4"
 
 # Build metadata (optional)
-BUILD_DATE = "2025-11-12"
+BUILD_DATE = "2025-11-19"
 
 # Version info dictionary
 VERSION_INFO = {

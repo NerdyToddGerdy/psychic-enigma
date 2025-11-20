@@ -10,6 +10,10 @@ from generators.dungeon_generator import parse_treasure_to_item
 from save_load import GameState, save_game, load_game, list_saves
 from tables import overland_tables, dungeon_tables
 from tables.table_roller import roll_on_table, roll_d6
+from logging_config import get_logger
+
+# Get logger for this module
+logger = get_logger(__name__)
 
 
 class GameManager:
@@ -34,7 +38,7 @@ class GameManager:
         Get complete game state for client.
 
         Returns:
-            dict: Complete game state including player and combat
+            dict: Complete game state including party and combat
         """
         return {
             "hex_grid": {
@@ -67,6 +71,13 @@ class GameManager:
                 }
                 for i, quest in enumerate(self.game_state.completed_quests)
             ],
+            # Party system (new)
+            "party": [p.to_dict() for p in self.game_state.party] if self.game_state.party else [],
+            "active_character_index": self.game_state.active_character_index,
+            "party_inventory": self.game_state.party_inventory,
+            "party_gold": self.game_state.party_gold,
+            "party_silver": self.game_state.party_silver,
+            # Backwards compatibility - active character as "player"
             "player": self.game_state.player.to_dict() if self.game_state.player else None,
             "active_combat": self.game_state.active_combat.get_combat_status()
             if self.game_state.active_combat else None,
@@ -546,23 +557,38 @@ class GameManager:
         # Check for hostile encounters and hazards in explorations
         combat_started = False
         hazard_saves = []
+        logger.debug(f"Checking explorations. Count: {len(result.get('explorations', []))}")
         for exp in result.get("explorations", []):
+            logger.debug(f"Exploration keys: {exp.keys()}")
+            logger.debug(f"Exploration result keys: {exp.get('result', {}).keys()}")
+            logger.debug(f"Has dangers: {exp.get('result', {}).get('dangers')}")
             if exp["result"].get("dangers"):
                 for danger in exp["result"]["dangers"]:
+                    logger.debug(f"Found danger - Type: {danger['type']}, Detail type: {type(danger.get('detail'))}")
+
                     # Handle hostile encounters
                     if not combat_started and danger["type"] == "Hostile" and isinstance(danger["detail"], dict):
+                        logger.debug(f"Hostile danger detected! Detail keys: {danger['detail'].keys()}")
+
                         # Hostile danger with monsters encountered
                         if "monsters" in danger["detail"] and danger["detail"]["monsters"]:
                             # Start combat with the monsters
                             from combat import CombatEncounter
                             monsters = danger["detail"]["monsters"]
 
-                            # Create combat encounter
+                            logger.info(f"Starting combat with {len(monsters)} monsters")
+                            logger.debug(f"Party size: {len(self.game_state.party)}")
+                            logger.debug(f"Party members: {[char.name for char in self.game_state.party]}")
+
+                            # Create combat encounter (party-based)
                             self.game_state.active_combat = CombatEncounter(
-                                self.game_state.player,
-                                monsters
+                                party=self.game_state.party,
+                                monsters=monsters
                             )
                             combat_started = True
+                            logger.info("Combat encounter created successfully")
+                        else:
+                            logger.debug("No monsters found in hostile danger detail")
                     # Handle unnatural encounters (undead/demons)
                     elif not combat_started and danger["type"] == "Unnatural" and isinstance(danger["detail"], dict):
                         # Unnatural danger with monsters encountered
@@ -571,10 +597,10 @@ class GameManager:
                             from combat import CombatEncounter
                             monsters = danger["detail"]["monsters"]
 
-                            # Create combat encounter
+                            # Create combat encounter (party-based)
                             self.game_state.active_combat = CombatEncounter(
-                                self.game_state.player,
-                                monsters
+                                party=self.game_state.party,
+                                monsters=monsters
                             )
                             combat_started = True
                     # Handle hazards with saves
@@ -812,11 +838,11 @@ class GameManager:
                     alive_monsters = [m for m in current_room.monsters if hasattr(m, 'is_alive') and m.is_alive]
 
                     if alive_monsters and not self.game_state.active_combat:
-                        # Start combat automatically
+                        # Start combat automatically (party-based)
                         from combat import CombatEncounter
                         self.game_state.active_combat = CombatEncounter(
-                            self.game_state.player,
-                            alive_monsters
+                            party=self.game_state.party,
+                            monsters=alive_monsters
                         )
                         combat_started = True
 
@@ -916,12 +942,12 @@ class GameManager:
                         monster.name = f"{monster.name} #{i + 1}"
                     monsters.append(monster)
 
-                # Start combat if not already in combat
+                # Start combat if not already in combat (party-based)
                 if monsters and not self.game_state.active_combat:
                     from combat import CombatEncounter
                     self.game_state.active_combat = CombatEncounter(
-                        self.game_state.player,
-                        monsters
+                        party=self.game_state.party,
+                        monsters=monsters
                     )
                     combat_started = True
 
@@ -1026,11 +1052,11 @@ class GameManager:
                         alive_monsters = [m for m in new_room.monsters if hasattr(m, 'is_alive') and m.is_alive]
 
                         if alive_monsters and not self.game_state.active_combat:
-                            # Start combat automatically
+                            # Start combat automatically (party-based)
                             from combat import CombatEncounter
                             self.game_state.active_combat = CombatEncounter(
-                                self.game_state.player,
-                                alive_monsters
+                                party=self.game_state.party,
+                                monsters=alive_monsters
                             )
                             combat_started = True
 
@@ -1216,53 +1242,135 @@ class GameManager:
     # Character Management Methods
 
     def create_character(self, name, race='Human', character_type='Adventurer',
-                         hp=10, ac=10, attack_bonus=0, weapon=None, armor=None):
+                         strength=10, dexterity=10, willpower=10, toughness=10,
+                         special_skill=None, weapon=None, armor=None, shield=None,
+                         helmet=None, level=1, xp=0, gold=0, silver=0):
         """
-        Create a custom player character.
+        Create a custom player character and add to party (max 3 characters).
 
         Args:
             name: Character name
             race: Character race
             character_type: Character type/class
-            hp: Hit points
-            ac: Armor class
-            attack_bonus: Attack bonus
+            strength: Strength ability score (3-18)
+            dexterity: Dexterity ability score (3-18)
+            willpower: Willpower ability score (3-18)
+            toughness: Toughness ability score (3-18)
+            special_skill: Special skill
             weapon: Starting weapon
             armor: Starting armor
+            shield: Starting shield
+            helmet: Starting helmet
+            level: Character level
+            xp: Starting XP
+            gold: Starting gold pieces (added to party gold if first character)
+            silver: Starting silver pieces (added to party silver if first character)
 
         Returns:
             dict: Character creation result
+
+        Raises:
+            ValueError: If party is already full (3 characters)
         """
+        # Check party size
+        if len(self.game_state.party) >= 3:
+            raise ValueError("Party is full (maximum 3 characters)")
+
         from generators import create_character
 
-        player = create_character(name, race, character_type, hp, ac, attack_bonus, weapon, armor)
-        self.game_state.player = player
+        # Create character (gold/silver will be ignored at character level)
+        player = create_character(
+            name=name,
+            race=race,
+            character_type=character_type,
+            strength=strength,
+            dexterity=dexterity,
+            willpower=willpower,
+            toughness=toughness,
+            special_skill=special_skill,
+            weapon=weapon,
+            armor=armor,
+            shield=shield,
+            helmet=helmet,
+            level=level,
+            xp=xp,
+            gold=0,  # Currency goes to party level
+            silver=0
+        )
+
+        # Add to party
+        self.game_state.party.append(player)
+
+        # If this is the first character, initialize party resources with their starting gold/silver
+        if len(self.game_state.party) == 1:
+            self.game_state.party_gold = gold
+            self.game_state.party_silver = silver
+            self.game_state.party_inventory = []
+            self.game_state.active_character_index = 0
+        else:
+            # Add currency to existing party stash
+            self.game_state.party_gold += gold
+            self.game_state.party_silver += silver
 
         return {
             "success": True,
-            "message": f"Character {name} created!",
-            "character": player.to_dict()
+            "message": f"Character {name} created and added to party!",
+            "character": player.to_dict(),
+            "party_size": len(self.game_state.party)
         }
 
     def generate_random_character(self, name=None):
         """
-        Generate a random character.
+        Generate a random character and add to party (max 3 characters).
 
         Args:
             name: Optional character name
 
         Returns:
             dict: Generated character
+
+        Raises:
+            ValueError: If party is already full (3 characters)
         """
+        # Check party size
+        if len(self.game_state.party) >= 3:
+            raise ValueError("Party is full (maximum 3 characters)")
+
         from generators import generate_random_character
 
         player = generate_random_character(name)
-        self.game_state.player = player
+
+        # Store starting currency from random generation
+        starting_gold = player.gold if hasattr(player, 'gold') else 0
+        starting_silver = player.silver if hasattr(player, 'silver') else 0
+
+        # Clear character-level currency (will go to party level)
+        if hasattr(player, 'gold'):
+            player.gold = 0
+        if hasattr(player, 'silver'):
+            player.silver = 0
+        if hasattr(player, 'inventory'):
+            player.inventory = []
+
+        # Add to party
+        self.game_state.party.append(player)
+
+        # If this is the first character, initialize party resources
+        if len(self.game_state.party) == 1:
+            self.game_state.party_gold = starting_gold
+            self.game_state.party_silver = starting_silver
+            self.game_state.party_inventory = []
+            self.game_state.active_character_index = 0
+        else:
+            # Add currency to existing party stash
+            self.game_state.party_gold += starting_gold
+            self.game_state.party_silver += starting_silver
 
         return {
             "success": True,
-            "message": f"Random character {player.name} generated!",
-            "character": player.to_dict()
+            "message": f"Random character {player.name} generated and added to party!",
+            "character": player.to_dict(),
+            "party_size": len(self.game_state.party)
         }
 
     def save_character(self, filename=None):
@@ -1390,6 +1498,188 @@ class GameManager:
             "current_hp": player.hp_current,
             "current_gold": player.gold,
             "current_silver": player.silver
+        }
+
+    # Vendor Transaction Methods
+
+    def purchase_item(self, vendor_type, item_name):
+        """
+        Purchase an item from a vendor at a settlement using party currency/inventory.
+
+        Args:
+            vendor_type (str): Type of vendor (Armorer, Merchant, Herbalist)
+            item_name (str): Name of the item to purchase
+
+        Returns:
+            dict: Purchase result with success status, item details, currency changes
+
+        Raises:
+            ValueError: If not at settlement, vendor not available, insufficient currency, or inventory full
+        """
+        from generators.vendor import VendorInventory
+
+        if not self.game_state.party or len(self.game_state.party) == 0:
+            raise ValueError("No party - create a character first")
+
+        # Check if at settlement
+        current_hex = self.game_state.hex_grid.get_current_hex()
+        if not current_hex or not current_hex.is_settlement:
+            raise ValueError("Must be at a settlement to visit vendors")
+
+        # Check if vendor is available in this settlement
+        if vendor_type not in current_hex.available_vendors:
+            raise ValueError(f"{vendor_type} is not available in this settlement")
+
+        # Get item details
+        item_details = VendorInventory.get_item_details(vendor_type, item_name)
+        if not item_details:
+            raise ValueError(f"Item '{item_name}' not found in {vendor_type}'s inventory")
+
+        cost_silver = item_details["cost_silver"]
+
+        # Check if party has enough currency
+        total_available = (self.game_state.party_gold * 10) + self.game_state.party_silver
+        if total_available < cost_silver:
+            gold_cost = cost_silver // 10
+            silver_cost = cost_silver % 10
+            cost_display = f"{gold_cost}gp {silver_cost}sp" if gold_cost > 0 else f"{silver_cost}sp"
+            current_display = f"{self.game_state.party_gold}gp {self.game_state.party_silver}sp"
+            raise ValueError(f"Not enough currency. {item_name} costs {cost_display}, but you only have {current_display}")
+
+        # Check party inventory space (max 10 slots, bulky items take 2 slots)
+        slots_needed = 2 if item_details.get("bulky", False) else 1
+        available_slots = 10 - len(self.game_state.party_inventory)
+        if available_slots < slots_needed:
+            raise ValueError(f"Not enough inventory space. Need {slots_needed} slot(s), only {available_slots} available")
+
+        # Deduct currency from party stash
+        remaining_cost = cost_silver
+
+        # First, try to pay with silver
+        silver_to_deduct = min(self.game_state.party_silver, remaining_cost)
+        self.game_state.party_silver -= silver_to_deduct
+        remaining_cost -= silver_to_deduct
+
+        # If more needed, convert gold to silver
+        if remaining_cost > 0:
+            gold_needed = (remaining_cost + 9) // 10  # Round up
+            if self.game_state.party_gold < gold_needed:
+                raise ValueError("Currency calculation error")
+
+            self.game_state.party_gold -= gold_needed
+            silver_from_gold = gold_needed * 10
+            self.game_state.party_silver += silver_from_gold - remaining_cost
+
+        # Add item to party inventory
+        self.game_state.party_inventory.append(item_name)
+
+        # If bulky, add a second slot marker
+        if item_details.get("bulky", False):
+            self.game_state.party_inventory.append(f"{item_name} (slot 2)")
+
+        return {
+            "success": True,
+            "item": item_details,
+            "cost_silver": cost_silver,
+            "current_gold": self.game_state.party_gold,
+            "current_silver": self.game_state.party_silver,
+            "inventory": self.game_state.party_inventory
+        }
+
+    def sell_item(self, item_name):
+        """
+        Sell an item from party inventory to vendor.
+        Sell price is 100% of purchase price (full value).
+
+        Args:
+            item_name (str): Name of the item to sell
+
+        Returns:
+            dict: Sale result with success status, value received, currency changes
+
+        Raises:
+            ValueError: If not at settlement, item not in inventory, or item cannot be sold
+        """
+        from generators.vendor import VendorInventory
+
+        if not self.game_state.party or len(self.game_state.party) == 0:
+            raise ValueError("No party - create a character first")
+
+        # Check if at settlement
+        current_hex = self.game_state.hex_grid.get_current_hex()
+        if not current_hex or not current_hex.is_settlement:
+            raise ValueError("Must be at a settlement to sell items")
+
+        # Check if item is in party inventory
+        if item_name not in self.game_state.party_inventory:
+            raise ValueError(f"'{item_name}' not found in party inventory")
+
+        # Determine item value by checking all vendor inventories
+        item_value = None
+        item_details = None
+
+        # Check Armorer
+        try:
+            item_details = VendorInventory.get_item_details("Armorer", item_name)
+            if item_details:
+                item_value = item_details["cost_silver"]
+        except:
+            pass
+
+        # Check Merchant
+        if not item_value:
+            try:
+                item_details = VendorInventory.get_item_details("Merchant", item_name)
+                if item_details:
+                    item_value = item_details["cost_silver"]
+            except:
+                pass
+
+        # Check Herbalist
+        if not item_value:
+            try:
+                item_details = VendorInventory.get_item_details("Herbalist", item_name)
+                if item_details:
+                    item_value = item_details["cost_silver"]
+            except:
+                pass
+
+        # If item not found in any vendor inventory, cannot be sold
+        if not item_value:
+            raise ValueError(f"'{item_name}' cannot be sold (not a vendor item)")
+
+        # Calculate sell price (100% of purchase price)
+        sell_price = VendorInventory.calculate_sell_price(item_value)
+        gold_to_add = sell_price // 10
+        silver_to_add = sell_price % 10
+
+        # Remove item from party inventory
+        self.game_state.party_inventory.remove(item_name)
+
+        # If item was bulky, remove the second slot marker
+        if item_details and item_details.get("bulky", False):
+            slot_marker = f"{item_name} (slot 2)"
+            if slot_marker in self.game_state.party_inventory:
+                self.game_state.party_inventory.remove(slot_marker)
+
+        # Add currency to party stash
+        self.game_state.party_silver += silver_to_add
+        self.game_state.party_gold += gold_to_add
+
+        # Auto-convert silver to gold (10 silver = 1 gold)
+        if self.game_state.party_silver >= 10:
+            self.game_state.party_gold += self.game_state.party_silver // 10
+            self.game_state.party_silver = self.game_state.party_silver % 10
+
+        return {
+            "success": True,
+            "item_name": item_name,
+            "sell_price_silver": sell_price,
+            "gold_received": gold_to_add,
+            "silver_received": silver_to_add,
+            "current_gold": self.game_state.party_gold,
+            "current_silver": self.game_state.party_silver,
+            "inventory": self.game_state.party_inventory
         }
 
     # Combat Methods

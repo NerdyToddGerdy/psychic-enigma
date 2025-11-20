@@ -13,6 +13,7 @@ const questManager = new QuestManager(
 );
 const characterManager = new CharacterManager(gameClient);
 const combatManager = new CombatManager(gameClient, characterManager);
+const shopManager = new ShopManager(gameClient);
 
 // State
 let currentState = null;
@@ -98,9 +99,16 @@ function renderCharacterStats(player, state = null) {
     }
 
     const hpPercent = (player.hp_current / player.hp_max) * 100;
-    const inventoryCount = player.inventory ? player.inventory.length : 0;
-    const silver = player.silver || 0;
-    const gold = player.gold || 0;
+
+    // Use party inventory and currency if available (new party system)
+    const partyInventory = state?.party_inventory || player.inventory || [];
+    const inventoryCount = partyInventory.length;
+    const silver = state?.party_silver ?? player.silver ?? 0;
+    const gold = state?.party_gold ?? player.gold ?? 0;
+
+    // Get party info
+    const party = state?.party || [];
+    const partySize = party.length;
 
     // Get day counter from state
     const currentDay = state ? (state.current_day || 1) : 1;
@@ -126,11 +134,11 @@ function renderCharacterStats(player, state = null) {
     const xpNeeded = xpForNextLevel - xpForCurrentLevel;
     const xpPercent = (xpProgress / xpNeeded) * 100;
 
-    // Build inventory HTML
+    // Build inventory HTML (using party inventory)
     let inventoryHTML = '';
     if (inventoryCount > 0) {
         inventoryHTML = '<div class="inventory-details"><div class="inventory-items">';
-        player.inventory.forEach((item, index) => {
+        partyInventory.forEach((item, index) => {
             const isItemObject = typeof item === 'object' && item.item_type;
             const itemName = isItemObject ? item.name : item;
             const isConsumable = isItemObject && item.item_type === 'consumable';
@@ -161,75 +169,41 @@ function renderCharacterStats(player, state = null) {
         inventoryHTML += '</div></div>';
     }
 
+    // Build party members HTML if party size > 1
+    let partyMembersHTML = '';
+    if (partySize > 1) {
+        partyMembersHTML = '<div style="margin-bottom: 15px;"><h4 style="margin: 0 0 8px 0; font-size: 14px; color: #888;">Party Members (3/3)</h4>';
+        party.forEach((char, index) => {
+            const charHpPercent = (char.hp_current / char.hp_max) * 100;
+            const isActive = index === state.active_character_index;
+            partyMembersHTML += `
+                <div class="party-member-mini" style="padding: 8px; background: ${isActive ? '#2a3a2a' : '#2a2a2a'}; border-radius: 4px; margin-bottom: 6px; ${isActive ? 'border-left: 3px solid #4CAF50;' : ''}">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <strong style="font-size: 13px;">${char.name}</strong> ${isActive ? '<span style="font-size: 10px; color: #4CAF50;">●</span>' : ''}
+                            <div style="font-size: 10px; color: #888;">${char.race} ${char.character_type} - Lvl ${char.level || 1}</div>
+                        </div>
+                        <div style="text-align: right; font-size: 11px;">
+                            <div style="margin-bottom: 2px;">HP: ${char.hp_current}/${char.hp_max}</div>
+                            <div style="width: 60px; height: 4px; background: #444; border-radius: 2px; overflow: hidden;">
+                                <div style="width: ${charHpPercent}%; height: 100%; background: linear-gradient(90deg, #ff4444, #ff8888);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        partyMembersHTML += '</div>';
+    }
+
     container.innerHTML = `
-        <div class="character-name">
-            <span>${player.name}</span>
-            <span style="font-size: 14px; color: #888; margin-left: 8px;">Level ${level}</span>
-        </div>
-        <div class="character-class">
-            ${player.race} ${player.character_type}
-        </div>
+        ${partyMembersHTML}
 
-        <!-- XP Progress Bar -->
-        <div class="stat-item hp-display" style="margin-bottom: 10px;">
-            <div style="width: 100%;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px;">
-                    <span class="stat-label">XP</span>
-                    <span class="stat-value">${xpCurrent} / ${xpForNextLevel}</span>
-                </div>
-                <div class="hp-bar-mini" style="background: #444;">
-                    <div class="hp-fill-mini" style="width: ${xpPercent}%; background: linear-gradient(90deg, #4CAF50, #8BC34A);"></div>
-                </div>
-            </div>
-        </div>
+        ${partySize > 1 ? '<h4 style="margin: 0 0 8px 0; font-size: 14px; color: #888;">Shared Resources</h4>' : ''}
 
-        <!-- Ability Scores Grid (Single Sheet: STR/DEX/WIL/TOU) -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px;">
-            <div class="ability-score">
-                <div class="ability-label">STR</div>
-                <div class="ability-value">${player.strength || 10}</div>
-                <div class="ability-mod">${formatModifier(strMod)}</div>
-            </div>
-            <div class="ability-score">
-                <div class="ability-label">DEX</div>
-                <div class="ability-value">${player.dexterity || 10}</div>
-                <div class="ability-mod">${formatModifier(dexMod)}</div>
-            </div>
-            <div class="ability-score">
-                <div class="ability-label">WIL</div>
-                <div class="ability-value">${player.willpower || 10}</div>
-                <div class="ability-mod">${formatModifier(wilMod)}</div>
-            </div>
-            <div class="ability-score">
-                <div class="ability-label">TOU</div>
-                <div class="ability-value">${player.toughness || 10}</div>
-                <div class="ability-mod">${formatModifier(touMod)}</div>
-            </div>
-        </div>
-
-        <!-- Core Stats Grid -->
         <div class="stat-grid">
-            <div class="stat-item hp-display">
-                <div style="width: 100%;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span class="stat-label">HP</span>
-                        <span class="stat-value">${player.hp_current}/${player.hp_max}</span>
-                    </div>
-                    <div class="hp-bar-mini">
-                        <div class="hp-fill-mini" style="width: ${hpPercent}%"></div>
-                    </div>
-                </div>
-            </div>
             <div class="stat-item">
-                <span class="stat-label">AC</span>
-                <span class="stat-value">${player.ac}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Attack</span>
-                <span class="stat-value">+${player.attack_bonus}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Currency</span>
+                <span class="stat-label">${partySize > 1 ? 'Party Gold' : 'Currency'}</span>
                 <span class="stat-value">${gold}gp ${silver}sp</span>
             </div>
             <div class="stat-item">
@@ -239,10 +213,10 @@ function renderCharacterStats(player, state = null) {
         </div>
         ${inventoryCount > 0 ? `
             <div class="inventory-summary" style="cursor: pointer;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
-                <strong>Inventory:</strong> ${inventoryCount} item${inventoryCount !== 1 ? 's' : ''} ▼
+                <strong>${partySize > 1 ? 'Party Inventory' : 'Inventory'}:</strong> ${inventoryCount}/10 item${inventoryCount !== 1 ? 's' : ''} ▼
             </div>
             ${inventoryHTML}
-        ` : '<div class="inventory-summary"><strong>Inventory:</strong> Empty</div>'}
+        ` : `<div class="inventory-summary"><strong>${partySize > 1 ? 'Party Inventory' : 'Inventory'}:</strong> Empty (0/10)</div>`}
     `;
 
     // Add event listeners for use item buttons
@@ -474,6 +448,24 @@ function setupEventHandlers() {
 /**
  * Update UI with new state
  */
+/**
+ * Refresh game state from server
+ */
+async function refreshGameState() {
+    console.log('[FRONTEND DEBUG] refreshGameState() called');
+    try {
+        const state = await gameClient.getGameState();
+        console.log('[FRONTEND DEBUG] Got state from server:', {
+            has_active_combat: !!state.active_combat,
+            active_combat_is_over: state.active_combat ? state.active_combat.is_over : null,
+            party_size: state.party ? state.party.length : null
+        });
+        updateUI(state);
+    } catch (error) {
+        console.error('[FRONTEND DEBUG] Error refreshing game state:', error);
+    }
+}
+
 function updateUI(state) {
     if (!state) {
         console.error('State is null or undefined');
@@ -540,15 +532,30 @@ function updateUI(state) {
     }
 
     // Handle combat if active
+    console.log('[FRONTEND DEBUG] updateUI - Checking combat:', {
+        has_active_combat: !!state.active_combat,
+        is_over: state.active_combat ? state.active_combat.is_over : null
+    });
+
     if (state.active_combat && !state.active_combat.is_over) {
+        console.log('[FRONTEND DEBUG] updateUI - Combat is active and not over');
+
         // Only show/update combat if it's not already over
 
         // Show combat modal if not already shown and not manually closing
         if (!combatManager.isManuallyClosing && (!combatManager.currentCombat || combatManager.modal.style.display !== 'block')) {
+            console.log('[FRONTEND DEBUG] updateUI - Showing combat modal');
             combatManager.showCombat(state.active_combat);
         } else if (!combatManager.isManuallyClosing && combatManager.modal.style.display === 'block') {
+            console.log('[FRONTEND DEBUG] updateUI - Updating combat display');
             // Update existing combat display only if modal is visible
             combatManager.renderCombat(state.active_combat);
+        } else {
+            console.log('[FRONTEND DEBUG] updateUI - Combat conditions not met:', {
+                isManuallyClosing: combatManager.isManuallyClosing,
+                hasCurrentCombat: !!combatManager.currentCombat,
+                modalDisplay: combatManager.modal.style.display
+            });
         }
     }
 }
@@ -703,6 +710,43 @@ function updateCurrentHexInfo(position) {
 
     html += '</div>';
     hexInfoDiv.innerHTML = html;
+
+    // Update vendor buttons if at settlement
+    updateVendorButtons(currentHex);
+}
+
+/**
+ * Update vendor buttons display based on current hex
+ */
+function updateVendorButtons(currentHex) {
+    const vendorButtonsDiv = document.getElementById('vendorButtons');
+    const buttonContainer = vendorButtonsDiv.querySelector('.vendor-button-container');
+
+    // Hide vendor buttons if not at settlement or no vendors available
+    if (!currentHex || !currentHex.is_settlement || !currentHex.available_vendors || currentHex.available_vendors.length === 0) {
+        vendorButtonsDiv.style.display = 'none';
+        return;
+    }
+
+    // Clear existing buttons
+    buttonContainer.innerHTML = '';
+
+    // Create button for each available vendor
+    currentHex.available_vendors.forEach(vendorType => {
+        // Skip "Inn" vendor (not implemented yet)
+        if (vendorType === 'Inn') return;
+
+        const button = document.createElement('button');
+        button.className = 'btn btn-accent vendor-btn';
+        button.textContent = `Visit ${vendorType}`;
+        button.addEventListener('click', () => {
+            shopManager.openShop(vendorType);
+        });
+        buttonContainer.appendChild(button);
+    });
+
+    // Show vendor buttons
+    vendorButtonsDiv.style.display = 'block';
 }
 
 /**
@@ -890,19 +934,33 @@ async function loadSave(filename) {
 function setupModalHandlers() {
     // Close buttons
     document.querySelectorAll('.modal .close, .modal-close-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const modal = e.target.closest('.modal');
             if (modal) {
+                console.log('[FRONTEND DEBUG] Closing modal:', modal.id);
                 modal.classList.remove('show');
+
+                // If closing exploration modal, refresh game state to check for combat
+                if (modal.id === 'explorationModal') {
+                    console.log('[FRONTEND DEBUG] Exploration modal closed, refreshing game state...');
+                    await refreshGameState();
+                }
             }
         });
     });
 
     // Click outside modal to close
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener('click', async (e) => {
             if (e.target === modal) {
+                console.log('[FRONTEND DEBUG] Closing modal (click outside):', modal.id);
                 modal.classList.remove('show');
+
+                // If closing exploration modal, refresh game state to check for combat
+                if (modal.id === 'explorationModal') {
+                    console.log('[FRONTEND DEBUG] Exploration modal closed (click outside), refreshing game state...');
+                    await refreshGameState();
+                }
             }
         });
     });

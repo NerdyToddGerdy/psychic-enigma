@@ -96,6 +96,12 @@ class Hex:
         # Set for starting Village, or when Settlement discovered
         self.settlement_type = "Village" if terrain == "Village" else None
 
+        # Available vendors/services in settlement (Armorer, Inn, Merchant, Herbalist)
+        # Roll when settlement is created/discovered
+        self.available_vendors = []
+        if self.is_settlement:
+            self.available_vendors = self._roll_settlement_vendors()
+
         # Discoveries in this hex
         self.discoveries = []
 
@@ -136,6 +142,8 @@ class Hex:
                 self.is_settlement = True
                 # Store the specific settlement type
                 self.settlement_type = discovery_detail
+                # Roll for available vendors
+                self.available_vendors = self._roll_settlement_vendors()
 
         elif explore_result == "Danger":
             # Roll for danger type
@@ -169,8 +177,25 @@ class Hex:
             return roll_on_table(overland_tables.DISCOVERY_PASSIVE)
         return None
 
+    @staticmethod
+    def _roll_settlement_vendors():
+        """
+        Roll on SETTLEMENT_AVAILABLE table to determine which vendors/services exist.
+
+        Returns:
+            list: Available vendor types (e.g., ["Merchant", "Inn", "Herbalist"])
+        """
+        vendors = []
+        # Roll 3 times on SETTLEMENT_AVAILABLE (d6 each)
+        for _ in range(3):
+            vendor = roll_on_table(overland_tables.SETTLEMENT_AVAILABLE)
+            if vendor and vendor not in vendors:
+                vendors.append(vendor)
+        return vendors
+
     def _get_danger_detail(self, danger_type):
         """Get specific danger details based on type"""
+        print(f"[HEX DEBUG] _get_danger_detail called with danger_type: {danger_type}")
         if danger_type == "Unnatural":
             # Spawn unnatural monsters (undead/demons)
             return self._spawn_unnatural_encounter()
@@ -178,7 +203,12 @@ class Hex:
             return roll_on_table(overland_tables.DANGER_HAZARD)
         elif danger_type == "Hostile":
             # Roll for encounter and spawn monsters
-            return self._spawn_hostile_encounter()
+            print(f"[HEX DEBUG] Calling _spawn_hostile_encounter()")
+            result = self._spawn_hostile_encounter()
+            print(f"[HEX DEBUG] Hostile encounter result: {result.keys() if isinstance(result, dict) else type(result)}")
+            if isinstance(result, dict) and "monsters" in result:
+                print(f"[HEX DEBUG] Number of monsters spawned: {len(result['monsters'])}")
+            return result
         return None
 
     def _get_terrain_encounter(self):
@@ -324,6 +354,7 @@ class Hex:
         hex_obj.explored = data["explored"]
         hex_obj.is_settlement = data.get("is_settlement", False)
         hex_obj.settlement_type = data.get("settlement_type")
+        hex_obj.available_vendors = data.get("available_vendors", [])
         hex_obj.discoveries = data["discoveries"]
         hex_obj.dangers = data["dangers"]
         return hex_obj
@@ -340,6 +371,7 @@ class Hex:
             "explored": self.explored,
             "is_settlement": self.is_settlement,
             "settlement_type": self.settlement_type,
+            "available_vendors": self.available_vendors,
             "discoveries": self.discoveries,
             "dangers": self.dangers
         }

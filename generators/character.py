@@ -1066,43 +1066,94 @@ def create_character(
     name: str,
     race: str = "Human",
     character_type: str = "Adventurer",
-    hp: int = 10,
-    ac: int = 10,
-    attack_bonus: int = 0,
+    strength: int = 10,
+    dexterity: int = 10,
+    willpower: int = 10,
+    toughness: int = 10,
+    special_skill: Optional[str] = None,
     weapon: Optional[str] = None,
     armor: Optional[str] = None,
+    shield: Optional[str] = None,
+    helmet: Optional[str] = None,
+    level: int = 1,
+    xp: int = 0,
+    gold: int = 0,
+    silver: int = 0,
 ) -> Player:
     """
-    Create a custom player character.
+    Create a custom player character with ability scores.
 
     Args:
         name: Character name
         race: Character race
         character_type: Character type/class
-        hp: Hit points
-        ac: Armor class
-        attack_bonus: Attack bonus
+        strength: Strength ability score (3-18)
+        dexterity: Dexterity ability score (3-18)
+        willpower: Willpower ability score (3-18)
+        toughness: Toughness ability score (3-18)
+        special_skill: Special skill (Forestry, Thieving, etc.)
         weapon: Starting weapon
         armor: Starting armor
+        shield: Starting shield
+        helmet: Starting helmet
+        level: Character level
+        xp: Starting XP
+        gold: Starting gold pieces
+        silver: Starting silver pieces
 
     Returns:
         Player instance
     """
+    # Auto-calculate HP from ability scores (PDF rules: 1d6 + 1, +1 if WIL >= 14)
+    base_hp = roll_d6() + 1
+    wil_bonus = 1 if willpower >= 14 else 0
+    calculated_hp = base_hp + wil_bonus
+
+    # Auto-calculate AC (10 + TOU bonus)
+    tou_bonus = 1 if toughness >= 14 else 0
+    calculated_ac = 10 + tou_bonus
+
+    # Auto-calculate attack bonus (STR bonus for melee)
+    str_bonus = 1 if strength >= 14 else 0
+    calculated_attack = str_bonus
+
     player = Player(
         name=name,
         race=race,
         character_type=character_type,
-        hp_max=hp,
-        ac=ac,
-        attack_bonus=attack_bonus,
+        hp_max=calculated_hp,
+        ac=calculated_ac,
+        attack_bonus=calculated_attack,
         damage_die="1d6",  # Default damage die
     )
+
+    # Set ability scores
+    player.strength = strength
+    player.dexterity = dexterity
+    player.willpower = willpower
+    player.toughness = toughness
+
+    # Set special skill
+    if special_skill:
+        player.special_skill = special_skill
+
+    # Set progression
+    player.level = level
+    player.xp_current = xp
+
+    # Set currency
+    player.gold = gold
+    player.silver = silver
 
     # Equip starting gear
     if weapon:
         player.equip_item("weapon", weapon)
     if armor:
         player.equip_item("armor", armor)
+    if shield:
+        player.equip_item("shield", shield)
+    if helmet:
+        player.equip_item("helmet", helmet)
 
     # Add basic starting items
     player.add_to_inventory("Ration")

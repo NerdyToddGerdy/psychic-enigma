@@ -1,0 +1,32 @@
+# RPG Hex Grid Game - Docker Compose Configuration
+version: '3.8'
+
+services:
+  rpg-game:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rpg-hex-grid-game
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-development}
+      - FLASK_DEBUG=${FLASK_DEBUG:-True}
+      - HOST=0.0.0.0
+      - PORT=5000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+    volumes:
+      # Mount saves and logs directories for persistence
+      - ./saves:/app/saves
+      - ./saved_characters:/app/saved_characters
+      - ./logs:/app/logs
+      # Uncomment for development: live code reload
+      # - .:/app
+    restart: unless-stopped
+    networks:
+      - rpg-network
+
+networks:
+  rpg-network:
+    driver: bridge

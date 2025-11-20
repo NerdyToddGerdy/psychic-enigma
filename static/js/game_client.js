@@ -46,6 +46,14 @@ class GameClient {
     }
 
     /**
+     * Get current game state (returns state object directly)
+     */
+    async getGameState() {
+        const response = await this.request('/game/state');
+        return response.state;
+    }
+
+    /**
      * Save current game
      */
     async saveGame(filename = null) {

@@ -15,7 +15,8 @@ class GameState:
     """Represents the complete game state"""
 
     def __init__(self, hex_grid=None, quests=None, active_quest_index=None, completed_quests=None, player=None,
-                 active_combat=None, current_day=1, movement_count=0, game_over=False, game_over_reason=None):
+                 active_combat=None, current_day=1, movement_count=0, game_over=False, game_over_reason=None,
+                 party=None, active_character_index=0, party_inventory=None, party_gold=0, party_silver=0):
         """
         Initialize game state.
 
@@ -24,18 +25,45 @@ class GameState:
             quests (list[Quest]): List of available/active quests
             active_quest_index (int, optional): Index of currently active quest
             completed_quests (list[Quest]): List of completed quests
-            player (Player, optional): Player character
+            player (Player, optional): DEPRECATED - use party instead
             active_combat (CombatEncounter, optional): Active combat encounter
             current_day (int): Current day number (starts at 1)
             movement_count (int): Number of movements since last day increment (0-4)
             game_over (bool): Whether the game has ended
             game_over_reason (str, optional): Reason for game over
+            party (list[Player], optional): Party of up to 3 characters
+            active_character_index (int): Index of active character in party (0-2)
+            party_inventory (list[str], optional): Shared party inventory (max 10 slots)
+            party_gold (int): Shared party gold
+            party_silver (int): Shared party silver
         """
         self.hex_grid = hex_grid if hex_grid else HexGrid()
         self.quests = quests if quests else []
         self.active_quest_index = active_quest_index
         self.completed_quests = completed_quests if completed_quests else []
-        self.player = player  # Can be None until character is created
+
+        # Party system (new)
+        self.party = party if party else []  # List of up to 3 Player objects
+        self.active_character_index = active_character_index  # Which character is active (0-2)
+
+        # Shared party resources
+        self.party_inventory = party_inventory if party_inventory else []  # Max 10 slots
+        self.party_gold = party_gold
+        self.party_silver = party_silver
+
+        # Legacy single player support (for backwards compatibility)
+        if player and not self.party:
+            # Migrate single player to party system
+            self.party = [player]
+            self.active_character_index = 0
+            # Migrate inventory/currency to party level
+            if hasattr(player, 'inventory'):
+                self.party_inventory = player.inventory.copy() if player.inventory else []
+            if hasattr(player, 'gold'):
+                self.party_gold = player.gold
+            if hasattr(player, 'silver'):
+                self.party_silver = player.silver
+
         self.active_combat = active_combat  # None when not in combat
         self.current_day = current_day  # Day counter (every 5 hex movements = 1 day)
         self.movement_count = movement_count  # Movements since last day (0-4)
@@ -48,6 +76,34 @@ class GameState:
         if self.active_quest_index is not None and 0 <= self.active_quest_index < len(self.quests):
             return self.quests[self.active_quest_index]
         return None
+
+    @property
+    def active_character(self):
+        """Get the currently active character from the party"""
+        if self.party and 0 <= self.active_character_index < len(self.party):
+            return self.party[self.active_character_index]
+        return None
+
+    @property
+    def player(self):
+        """DEPRECATED: Backwards compatibility - returns active character"""
+        return self.active_character
+
+    def set_active_character(self, index):
+        """
+        Switch the active character.
+
+        Args:
+            index (int): Index of character to make active (0-2)
+
+        Raises:
+            ValueError: If index is out of range
+        """
+        if not self.party:
+            raise ValueError("No party exists")
+        if not (0 <= index < len(self.party)):
+            raise ValueError(f"Invalid character index: {index}")
+        self.active_character_index = index
 
     def to_dict(self):
         """
@@ -63,7 +119,17 @@ class GameState:
             "quests": [quest.to_dict() for quest in self.quests],
             "active_quest_index": self.active_quest_index,
             "completed_quests": [quest.to_dict() for quest in self.completed_quests],
+
+            # Party system
+            "party": [char.to_dict() for char in self.party] if self.party else [],
+            "active_character_index": self.active_character_index,
+            "party_inventory": self.party_inventory,
+            "party_gold": self.party_gold,
+            "party_silver": self.party_silver,
+
+            # Legacy compatibility (save active character as player)
             "player": self.player.to_dict() if self.player else None,
+
             "active_combat": self.active_combat.to_dict() if self.active_combat else None,
             "current_day": self.current_day,
             "movement_count": self.movement_count,
@@ -88,9 +154,23 @@ class GameState:
         active_quest_index = data.get("active_quest_index")
         completed_quests = [Quest.from_dict(q) for q in data.get("completed_quests", [])]
 
-        # Load player if present
+        # Load party if present (new system)
+        party = None
+        active_character_index = 0
+        party_inventory = []
+        party_gold = 0
+        party_silver = 0
+
+        if data.get("party"):
+            party = [Player.from_dict(char_data) for char_data in data["party"]]
+            active_character_index = data.get("active_character_index", 0)
+            party_inventory = data.get("party_inventory", [])
+            party_gold = data.get("party_gold", 0)
+            party_silver = data.get("party_silver", 0)
+
+        # Load legacy single player if present (backwards compatibility)
         player = None
-        if data.get("player"):
+        if data.get("player") and not party:
             player = Player.from_dict(data["player"])
 
         # Load active combat if present
@@ -107,8 +187,23 @@ class GameState:
         game_over = data.get("game_over", False)
         game_over_reason = data.get("game_over_reason", None)
 
-        return cls(hex_grid, quests, active_quest_index, completed_quests, player, active_combat, current_day,
-                   movement_count, game_over, game_over_reason)
+        return cls(
+            hex_grid=hex_grid,
+            quests=quests,
+            active_quest_index=active_quest_index,
+            completed_quests=completed_quests,
+            player=player,
+            active_combat=active_combat,
+            current_day=current_day,
+            movement_count=movement_count,
+            game_over=game_over,
+            game_over_reason=game_over_reason,
+            party=party,
+            active_character_index=active_character_index,
+            party_inventory=party_inventory,
+            party_gold=party_gold,
+            party_silver=party_silver
+        )
 
 
 def save_game(game_state, filename=None, save_dir="saves"):

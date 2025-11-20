@@ -37,32 +37,78 @@ A web-based hexagonal grid exploration game with procedurally generated quests, 
 11. **Settlements**: Visit settlements to heal (costs currency based on missing HP)
 12. **Complete Quests**: Clear dungeons and collect rewards to complete objectives
 
+## Infrastructure
+
+This project includes modern infrastructure components:
+
+- ⚙️ **Environment Configuration** - Configurable via `.env` files
+- 📝 **Logging Framework** - Structured logging with rotation
+- 🐳 **Docker Support** - Full containerization with Docker Compose
+- 🔄 **CI/CD Pipeline** - GitHub Actions for automated testing and builds
+
+For detailed infrastructure documentation, see [INFRASTRUCTURE.md](INFRASTRUCTURE.md)
+
 ## Installation
 
-### Requirements
+### Option 1: Docker (Recommended)
 
-- Python 3.8+
-- Flask
-- Flask-CORS
+**Prerequisites:**
+- Docker
+- Docker Compose
 
-### Install Dependencies
+**Quick Start:**
 
 ```bash
-pip install flask flask-cors
+# 1. Clone the repository
+git clone <repository-url>
+cd rpgGame
+
+# 2. Copy environment file
+cp .env.example .env
+
+# 3. Start with Docker Compose
+docker-compose up
 ```
 
-## Running the Game
+Access the game at `http://localhost:5000`
 
-### Start the Server
+**Docker Commands:**
 
 ```bash
-python3 run_server.py
+# Start in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose down
+
+# Rebuild after changes
+docker-compose up --build
 ```
 
-Or directly:
+### Option 2: Local Python Installation
+
+**Prerequisites:**
+- Python 3.10+
+- pip
+
+**Setup:**
 
 ```bash
-python3 -m api.game_server
+# 1. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Copy environment file
+cp .env.example .env
+
+# 4. Run the server
+python run_server.py
 ```
 
 ### Access the Game
@@ -251,15 +297,60 @@ Each quest has:
 
 ## Development
 
+### Development Setup
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd rpgGame
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment file
+cp .env.example .env
+```
+
 ### Running Tests
 
 ```bash
 # Run all tests
-python3 -m unittest discover tests
+python -m unittest discover tests -v
 
 # Run specific test file
-python3 -m unittest tests.test_hex_grid
+python -m unittest tests.test_hex_grid
+
+# With Docker
+docker-compose run rpg-game python -m unittest discover tests -v
 ```
+
+### Code Quality
+
+```bash
+# Format code with black
+black .
+
+# Lint with flake8
+flake8 .
+
+# Type checking with mypy
+mypy .
+```
+
+### CI/CD
+
+The project uses GitHub Actions for continuous integration:
+
+- **Tests**: Runs on Python 3.10 and 3.11
+- **Linting**: Black formatting and Flake8 checks
+- **Docker Build**: Validates Docker image builds
+- **Security**: Dependency and code security scans
+
+Pipeline runs automatically on push and pull requests to `main` and `develop` branches.
 
 ### Adding New Features
 
@@ -267,11 +358,17 @@ python3 -m unittest tests.test_hex_grid
    - Add game logic to `generators/` or `tables/`
    - Add API endpoints to `api/game_server.py`
    - Add state management to `api/game_state.py`
+   - Use logging: `from logging_config import get_logger`
 
 2. **Frontend (JavaScript)**:
    - Update UI in `static/index.html`
    - Add styles to `static/css/style.css`
    - Add logic to `static/js/` modules
+
+3. **Testing**:
+   - Add tests in `tests/` directory
+   - Follow existing test patterns
+   - Ensure CI pipeline passes
 
 ## Save Files
 

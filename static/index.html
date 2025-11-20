@@ -44,6 +44,13 @@
                                 <div id="currentHexInfo" class="hex-info">
                                     <p>Click on a hex for details</p>
                                 </div>
+                                <!-- Vendor Buttons (shown at settlements) -->
+                                <div id="vendorButtons" class="vendor-buttons" style="display: none;">
+                                    <div class="vendor-header">Available Vendors:</div>
+                                    <div class="vendor-button-container">
+                                        <!-- Vendor buttons will be dynamically added here -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -355,11 +362,48 @@
                         <label for="customCharName"></label><input type="text" id="customCharName" placeholder="Name" required>
                         <label for="customCharRace"></label><input type="text" id="customCharRace" placeholder="Race (default: Human)">
                         <label for="customCharClass"></label><input type="text" id="customCharClass" placeholder="Class (default: Adventurer)">
-                        <label for="customCharHP"></label><input type="number" id="customCharHP" placeholder="HP (default: 10)" min="1">
-                        <label for="customCharAC"></label><input type="number" id="customCharAC" placeholder="AC (default: 10)" min="1">
-                        <label for="customCharAttack"></label><input type="number" id="customCharAttack" placeholder="Attack Bonus (default: 0)">
+
+                        <!-- Core Ability Scores -->
+                        <div class="ability-scores-group">
+                            <h5 style="margin: 10px 0 5px 0; font-size: 0.9em; color: #888;">Ability Scores (3-18)</h5>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                                <input type="number" id="customCharSTR" placeholder="STR (default: 10)" min="3" max="18">
+                                <input type="number" id="customCharDEX" placeholder="DEX (default: 10)" min="3" max="18">
+                                <input type="number" id="customCharWIL" placeholder="WIL (default: 10)" min="3" max="18">
+                                <input type="number" id="customCharTOU" placeholder="TOU (default: 10)" min="3" max="18">
+                            </div>
+                        </div>
+
+                        <!-- Special Skill -->
+                        <label for="customCharSkill">Special Skill:</label>
+                        <select id="customCharSkill">
+                            <option value="">None</option>
+                            <option value="Forestry">Forestry (tracking, foraging)</option>
+                            <option value="Thieving">Thieving (locks, triggers)</option>
+                            <option value="Brutalism">Brutalism (combat vs giants)</option>
+                            <option value="Alchemy">Alchemy (potion creation)</option>
+                            <option value="Arcanism">Arcanism (scrolls, artifacts)</option>
+                            <option value="Mentalism">Mentalism (intimidation, persuasion)</option>
+                        </select>
+
+                        <!-- Equipment -->
                         <label for="customCharWeapon"></label><input type="text" id="customCharWeapon" placeholder="Weapon (optional)">
                         <label for="customCharArmor"></label><input type="text" id="customCharArmor" placeholder="Armor (optional)">
+                        <label for="customCharShield"></label><input type="text" id="customCharShield" placeholder="Shield (optional)">
+                        <label for="customCharHelmet"></label><input type="text" id="customCharHelmet" placeholder="Helmet (optional)">
+
+                        <!-- Progression -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                            <input type="number" id="customCharLevel" placeholder="Level (default: 1)" min="1">
+                            <input type="number" id="customCharXP" placeholder="XP (default: 0)" min="0">
+                        </div>
+
+                        <!-- Currency -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                            <input type="number" id="customCharGold" placeholder="Gold (default: 0)" min="0">
+                            <input type="number" id="customCharSilver" placeholder="Silver (default: 0)" min="0">
+                        </div>
+
                         <button id="createCustomBtn" class="btn btn-primary">Create Custom</button>
                     </div>
                 </div>
@@ -407,12 +451,58 @@
         </div>
     </div>
 
+    <!-- Shop Modal -->
+    <div id="shopModal" class="modal">
+        <div class="modal-content shop-modal">
+            <span class="close">&times;</span>
+            <h2 id="shopTitle">Shop</h2>
+
+            <!-- Player Currency Display -->
+            <div class="player-currency">
+                <span id="shopPlayerCurrency">0gp 0sp</span>
+            </div>
+
+            <!-- Shop Tabs (Buy/Sell) -->
+            <div class="shop-tabs">
+                <button class="shop-tab active" data-tab="buy">Buy</button>
+                <button class="shop-tab" data-tab="sell">Sell</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="shop-tab-content">
+                <!-- Buy Tab -->
+                <div id="buyTab" class="shop-tab-pane active">
+                    <h3>Available Items</h3>
+                    <div id="shopInventory" class="shop-inventory">
+                        <!-- Vendor items will be populated here -->
+                        <p class="loading">Loading inventory...</p>
+                    </div>
+                </div>
+
+                <!-- Sell Tab -->
+                <div id="sellTab" class="shop-tab-pane">
+                    <h3>Your Inventory</h3>
+                    <div id="shopPlayerInventory" class="shop-player-inventory">
+                        <!-- Player inventory items will be populated here -->
+                        <p class="no-items">No items to sell</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close Button -->
+            <div class="modal-actions">
+                <button class="btn btn-secondary modal-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="js/hex_renderer.js"></script>
-    <script src="js/game_client.js"></script>
-    <script src="js/quest_manager.js"></script>
-    <script src="js/character_manager.js"></script>
-    <script src="js/combat_ui.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/hex_renderer.js?v=0.3.0"></script>
+    <script src="js/game_client.js?v=0.3.0"></script>
+    <script src="js/quest_manager.js?v=0.3.0"></script>
+    <script src="js/character_manager.js?v=0.3.0"></script>
+    <script src="js/combat_ui.js?v=0.3.0"></script>
+    <script src="js/shop_manager.js?v=0.3.0"></script>
+    <script src="js/app.js?v=0.3.1"></script>
 </body>
 </html>
